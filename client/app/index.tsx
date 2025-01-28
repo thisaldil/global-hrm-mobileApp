@@ -9,8 +9,9 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import axios from 'axios';
+import Splash from './splash';
 
-const Index = () => {
+const Index: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -48,6 +49,7 @@ const Index = () => {
 
     return (
         <View style={styles.container}>
+            <Splash />
             <Text style={styles.title}>Admin Login</Text>
 
             <TextInput
