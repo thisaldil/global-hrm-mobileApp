@@ -4,7 +4,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Index from './index';  // Your Splash screen
-import Login from './login';  // Your Login screen
+import Login from './index';  // Your index screen
 
 const Stack = createStackNavigator();
 

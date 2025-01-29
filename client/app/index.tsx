@@ -17,7 +17,7 @@ const Index = () => {
         await SplashScreen.hideAsync();
 
         // Navigate to login page
-        router.replace('/login');  // This replaces the current screen
+        router.replace('/home');  // This replaces the current screen
 
       } catch (error) {
         console.warn('Error during splash screen handling:', error);
