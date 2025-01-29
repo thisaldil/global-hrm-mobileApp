@@ -1,23 +1,17 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, Alert } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { t } from "react-native-tailwindcss";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "./navigation/types"; // Import the navigation types
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import Icon from "react-native-vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
-
-interface Props {
-  navigation: LoginScreenNavigationProp;
-}
-
-const Login: React.FC<Props> = ({ navigation }) => {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
 
   const handleSubmit = async () => {
     setError(null);
@@ -31,20 +25,20 @@ const Login: React.FC<Props> = ({ navigation }) => {
 
       const { token, employeeId, email: userEmail, role } = res.data;
 
-      // Save data to AsyncStorage
+      if (userEmail) {
+        await AsyncStorage.setItem("email", userEmail);
+      }
+
       await AsyncStorage.setItem("authToken", token);
       await AsyncStorage.setItem("empId", employeeId);
-      await AsyncStorage.setItem("email", userEmail);
       await AsyncStorage.setItem("role", role);
       await AsyncStorage.setItem("loginTimestamp", JSON.stringify(Date.now()));
 
       Alert.alert("Success", "Login Successful!");
-
-      // Navigate to Dashboard screen
-      navigation.navigate("Dashboard"); // Now TypeScript will ensure this is valid
+      // navigation.navigate("Dashboard");
     } catch (err) {
-      console.error(err);
-      setError("Invalid login credentials");
+      console.error("Error:", err);
+      // setError("Invalid login credentials");
     } finally {
       setLoading(false);
     }
@@ -52,12 +46,14 @@ const Login: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={[t.flex1, t.bgGray100, t.itemsCenter, t.justifyCenter, t.pX4]}>
+      <Image source={require("../assets/images/logo2.png")} style={[t.h24, t.w24, t.mB6]} />
       <Text style={[t.text2xl, t.fontBold, t.textGray700, t.mB6]}>Login</Text>
+
       {error && <Text style={[t.textRed500, t.textCenter, t.mB4]}>{error}</Text>}
 
       <View style={[t.wFull, t.mB4]}>
         <Text style={[t.textSm, t.textGray500, t.mB2]}>
-          <Icon name="mail-outline" size={16} style={[t.mR2]} /> Email
+          <Ionicons name="mail-outline" size={16} style={[t.mR2]} /> Email
         </Text>
         <TextInput
           style={[t.border, t.borderGray300, t.roundedLg, t.p3, t.bgWhite]}
@@ -71,7 +67,7 @@ const Login: React.FC<Props> = ({ navigation }) => {
 
       <View style={[t.wFull, t.mB6]}>
         <Text style={[t.textSm, t.textGray500, t.mB2]}>
-          <Icon name="key-outline" size={16} style={[t.mR2]} /> Password
+          <Ionicons name="key-outline" size={16} style={[t.mR2]} /> Password
         </Text>
         <TextInput
           style={[t.border, t.borderGray300, t.roundedLg, t.p3, t.bgWhite]}
@@ -92,6 +88,10 @@ const Login: React.FC<Props> = ({ navigation }) => {
         ) : (
           <Text style={[t.textWhite, t.textLg, t.fontMedium]}>Sign In</Text>
         )}
+      </TouchableOpacity>
+
+      <TouchableOpacity >
+        <Text style={[t.textOrange500, t.textSm, t.underline]}>Forgot Password?</Text>
       </TouchableOpacity>
     </View>
   );
