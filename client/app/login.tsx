@@ -1,120 +1,96 @@
-import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StyleSheet,
-    Alert,
-    ActivityIndicator,
-} from 'react-native';
-import axios from 'axios';
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, Alert } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { t } from "react-native-tailwindcss";
+// import ForgotPasswordModal from "./ForgotPassword"; // Ensure this is adapted for React Native
+import axios from "axios";
 
 const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
-    const handleLogin = async () => {
-        if (!email || !password) {
-            Alert.alert('Error', 'Please fill out all fields');
-            return;
-        }
-
+    const handleSubmit = async () => {
+        setError(null);
         setLoading(true);
 
         try {
-            const response = await axios.post('https://global-hrm-mobile-server.vercel.app/auth/login', {
+            const res = await axios.post("https://global-hrm-mobile-server.vercel.app/auth/login", {
                 email,
                 password,
             });
 
-            // Handle successful login
-            Alert.alert('Success', response.data.message);
-            console.log('Admin Info:', response.data.admin);
-            console.log('Token:', response.data.token);
-
-            // Save token to storage if needed (AsyncStorage or SecureStorage)
-        } catch (error) {
-            console.error('Login Error!');
-            Alert.alert(
-                'Error',
-                'An unexpected error occurred'
-            );
+            const { token, employeeId, email: userEmail, role } = res.data;
+            // Save data to local storage (use AsyncStorage for RN)
+            Alert.alert("Success", "Login Successful!");
+        } catch (err) {
+            console.error(err);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Admin Login</Text>
+        <View style={[t.flex1, t.bgGray100, t.itemsCenter, t.justifyCenter, t.pX4]}>
+            <Image source={require("../assets/images/logo2.png")} style={[t.h24, t.w24, t.mB6]} />
+            <Text style={[t.text2xl, t.fontBold, t.textGray700, t.mB6]}>Login</Text>
 
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-            />
+            {error && <Text style={[t.textRed500, t.textCenter, t.mB4]}>{error}</Text>}
 
-            {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
-            ) : (
-                <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                    <Text style={styles.buttonText}>Login</Text>
-                </TouchableOpacity>
-            )}
+            <View style={[t.wFull, t.mB4]}>
+                <Text style={[t.textSm, t.textGray500, t.mB2]}>
+                    <FontAwesome name="envelope" size={16} style={[t.mR2]} /> Email
+                </Text>
+                <TextInput
+                    style={[t.border, t.borderGray300, t.roundedBSm, t.p3, t.bgWhite]}
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                />
+            </View>
+
+            <View style={[t.wFull, t.mB6]}>
+                <Text style={[t.textSm, t.textGray500, t.mB2]}>
+                    <FontAwesome name="key" size={16} style={[t.mR2]} /> Password
+                </Text>
+                <TextInput
+                    style={[t.border, t.borderGray300, t.roundedBSm, t.p3, t.bgWhite]}
+                    placeholder="Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                />
+            </View>
+
+            <TouchableOpacity
+                style={[t.bgOrange500, t.h12, t.roundedBSm, t.itemsCenter, t.justifyCenter, t.wFull, t.mB4]}
+                onPress={handleSubmit}
+                disabled={loading}
+            >
+                {loading ? (
+                    <ActivityIndicator color="#fff" />
+                ) : (
+                    <Text style={[t.textWhite, t.textLg, t.fontMedium]}>Sign In</Text>
+                )}
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setIsForgotPasswordOpen(true)}>
+                <Text style={[t.textOrange500, t.textSm, t.underline]}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            {/* Ensure ForgotPasswordModal is adapted for React Native */}
+            {/* {isForgotPasswordOpen && (
+                <ForgotPasswordModal
+                    isOpen={isForgotPasswordOpen}
+                    onClose={() => setIsForgotPasswordOpen(false)}
+                />
+            )} */}
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f5f5f5',
-        padding: 20,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: '#333',
-    },
-    input: {
-        width: '100%',
-        height: 50,
-        borderColor: '#ccc',
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        marginBottom: 20,
-        backgroundColor: '#fff',
-    },
-    button: {
-        width: '100%',
-        height: 50,
-        backgroundColor: '#007bff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 8,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-});
 
 export default Login;
