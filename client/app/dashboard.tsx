@@ -4,6 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { t } from "react-native-tailwindcss";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ProfilePicture from "@/components/profilepicture";
+
 
 const Dashboard = () => {
   const [punchInTime, setPunchInTime] = useState<string | null>(null);
@@ -58,8 +60,8 @@ const Dashboard = () => {
         <View style={[t.bgWhite, t.roundedLg, t.p4, t.mB6, t.shadow]}>
           <Text style={[t.textLg, t.fontSemibold, t.mB4]}>Time at Work</Text>
           <View style={[t.flexRow, t.itemsCenter, t.mB5]}>
-            <View style={[t.w10, t.h10, t.roundedFull, t.border, t.borderOrange500, t.flex, t.justifyCenter, t.itemsCenter]}>
-              <Ionicons name="person-circle-outline" size={32} color="#FFA500" />
+            <View style={[t.maxW10, t.maxH10, t.roundedFull, t.border, t.borderOrange500, t.flex, t.justifyCenter, t.itemsCenter]}>
+              <ProfilePicture />
             </View>
             <View style={[t.mL3]}>
               <Text style={[t.textOrange600, t.fontSemibold]}>{punchedStatus}</Text>
