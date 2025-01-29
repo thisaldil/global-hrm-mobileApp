@@ -1,3 +1,5 @@
+// Login.tsx
+
 import React, { useState } from 'react';
 import {
     View,
@@ -9,6 +11,8 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import axios from 'axios';
+import Footer from './layouts/footer'; // ✅ Import Footer component
+
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -74,6 +78,8 @@ const Login = () => {
                     <Text style={styles.buttonText}>Login</Text>
                 </TouchableOpacity>
             )}
+             {/* ✅ Added Footer here */}
+             <Footer />
         </View>
     );
 };
