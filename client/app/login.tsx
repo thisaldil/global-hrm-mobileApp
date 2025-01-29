@@ -4,14 +4,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { t } from "react-native-tailwindcss";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "./types";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const navigation = useNavigation();
+
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const handleSubmit = async () => {
     setError(null);
@@ -34,11 +37,11 @@ const Login = () => {
       await AsyncStorage.setItem("role", role);
       await AsyncStorage.setItem("loginTimestamp", JSON.stringify(Date.now()));
 
-      Alert.alert("Success", "Login Successful!");
-      // navigation.navigate("Dashboard");
+      navigation.replace("dashboard");
+
     } catch (err) {
       console.error("Error:", err);
-      // setError("Invalid login credentials");
+      setError("Invalid login credentials");
     } finally {
       setLoading(false);
     }

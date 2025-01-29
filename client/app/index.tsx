@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 
 const Index = () => {
   const router = useRouter();
@@ -29,6 +29,7 @@ const Index = () => {
   return (
     <View>
       <Text>index</Text>
+      <Link href={'/login'}>login</Link>
     </View>
   );
 };
