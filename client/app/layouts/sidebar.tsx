@@ -50,7 +50,7 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
         
         {/* Logo at the Top-Right */}
         <View style={styles.logoContainer}>
-          <Image source={require('E:/global-hrm-mobile/client/assets/images/logo2.png')} style={styles.logo} />
+          <Image source={require('../../assets/images/logo2.png')} style={styles.logo} />
         </View>
 
         {/* Main Menu Items */}
