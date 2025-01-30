@@ -9,6 +9,7 @@ import Chat from './chat';  // Correct path for Chat screen
 import News from './news';  // Correct path for News screen
 import Support from './support';  // Correct path for Support screen
 import Logout from './logout';  // Correct path for Logout screen
+import Dashboard from "./dashboard";
 
 // Type for Stack Navigator routes and their parameters (if needed)
 type RootStackParamList = {
@@ -49,6 +50,7 @@ const App: React.FC = () => {
         <Stack.Screen name="news" component={News} />
         <Stack.Screen name="support" component={Support} />
         <Stack.Screen name="logout" component={Logout} />
+        <Stack.Screen name="dashboard" component={Dashboard} />
       </Stack.Navigator>
     </NavigationContainer>
   );
