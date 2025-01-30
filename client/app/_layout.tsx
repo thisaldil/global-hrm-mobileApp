@@ -1,25 +1,25 @@
-//_layouts.tsx
-//E:\global-hrm-mobile\client\app\_layout.tsx
-
 import { View } from 'react-native';
-import Footer from './layouts/footer'; 
-import Header from './layouts/header'; // Correct relative path
-// Correct relative path
+import { useSegments } from 'expo-router';
+import Footer from './layouts/footer';
+import Header from './layouts/header';
 import { Slot } from 'expo-router';
 
 const RootLayout = () => {
+  const segments = useSegments(); // Get the current route segments
+  const isLoginPage = segments?.[0] === 'login'; // Check if the first segment is "login"
+
   return (
     <View style={{ flex: 1 }}>
-    {/* Render the Header */}
-    <Header/>
+      {/* Conditionally render the Header */}
+      {!isLoginPage && <Header />}
 
       {/* Render the child route */}
       <View style={{ flex: 1 }}>
         <Slot />
       </View>
 
-      {/* Render the Footer */}
-      <Footer />
+      {/* Conditionally render the Footer */}
+      {!isLoginPage && <Footer />}
     </View>
   );
 };
