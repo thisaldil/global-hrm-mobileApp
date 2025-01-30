@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 
 const Index = () => {
   const router = useRouter();
@@ -27,16 +27,9 @@ const Index = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      {/* Logo Image */}
-      <Image
-        source={require("../assets/images/logo2.png")} // Ensure path is correct
-        style={styles.logo}
-      />
-
-      {/* Welcome Text */}
-      <Text>Welcome to</Text>
-      <Text style={styles.title}>GLOBAL HRM MOBILE!</Text>
+    <View>
+      <Text>index</Text>
+      <Link href={'/login'}>login</Link>
     </View>
   );
 };
