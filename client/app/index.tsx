@@ -1,40 +1,48 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Index = () => {
   const router = useRouter();
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
     const prepareApp = async () => {
       try {
         await SplashScreen.preventAutoHideAsync();
-
-        // Simulate loading for 10 seconds
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        await SplashScreen.hideAsync();
+        const token = await AsyncStorage.getItem("authToken");
 
-        // Navigate to home page
-        router.replace("/login");
+        if (token) {
+          router.replace("/dashboard");
+        } else {
+          router.replace("/login");
+        }
+
+        await SplashScreen.hideAsync();
       } catch (error) {
         console.error("Error during splash screen handling:", error);
+      } finally {
+        setIsAuthChecked(true);
       }
     };
 
     prepareApp();
   }, []);
 
+  if (!isAuthChecked) {
+    return null;
+  }
+
   return (
     <View style={styles.container}>
-      {/* Logo Image */}
       <Image
-        source={require("../assets/images/logo2.png")} // Ensure path is correct
+        source={require("../assets/images/logo2.png")}
         style={styles.logo}
       />
-
-      {/* Welcome Text */}
       <Text>Welcome to</Text>
       <Text style={styles.title}>GLOBAL HRM MOBILE!</Text>
     </View>
@@ -46,20 +54,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#000", // White background for a clean look
+    backgroundColor: "#000",
   },
   logo: {
-    width: 150, // Adjust the size of the logo as needed
+    width: 150,
     height: 60,
     resizeMode: "contain",
-    marginBottom: 20, // Adds spacing between logo & text
+    marginBottom: 20,
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#02c3cc", // Use the desired color
+    color: "#02c3cc",
     textAlign: "center",
   },
 });
 
-export default Index;
+export default Index;
