@@ -25,6 +25,12 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
   // Function to handle menu item press and set active item
   const handlePress = async (item: string, route: keyof RootStackParamList) => {
     setActiveItem(item);
+    navigation.navigate(route);
+    toggleSidebar();
+  };
+
+  const handleLogout = async (item: string, route: keyof RootStackParamList) => {
+    setActiveItem(item);
     await AsyncStorage.clear();
     console.log('Local Storage cleared!');
     navigation.navigate(route);
@@ -83,7 +89,7 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
               size={24}
               style={[styles.icon, activeItem === 'chat' && { color: activeColor }]}
             />
-            <Text style={[styles.menuText, activeItem === 'chat' && { color: activeColor }]}>Chats</Text>
+            <Text style={[styles.menuText, activeItem === 'chat' && { color: activeColor }]}>Communication</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -118,7 +124,7 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
         <View style={styles.bottomMenu}>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => handlePress('logout', 'login')}
+            onPress={() => handleLogout('logout', 'login')}
           >
             <Icon
               name="log-out-outline"

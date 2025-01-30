@@ -5,7 +5,10 @@ import { t } from "react-native-tailwindcss";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ProfilePicture from "@/components/profilepicture";
-
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "./types";
+import Actions from "@/components/actions";
 
 const Dashboard = () => {
   const [punchInTime, setPunchInTime] = useState<string | null>(null);
@@ -13,6 +16,7 @@ const Dashboard = () => {
   const [punchedStatus, setPunchedStatus] = useState("Not Punched Yet");
   const [loading, setLoading] = useState(false);
   const [empId, setEmpId] = useState<string | null>(null);
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   AsyncStorage.getItem("empId").then((value) => {
     setEmpId(value);
@@ -46,14 +50,6 @@ const Dashboard = () => {
     fetchAttendance();
   }, [empId]);
 
-  const handlePunch = (type: "in" | "out") => {
-    Alert.alert(
-      "Punch",
-      `You clicked Punch ${type === "in" ? "In" : "Out"}.`,
-      [{ text: "OK" }]
-    );
-  };
-
   return (
     <ScrollView style={[t.flex1, t.bgGray100]}>
       <View style={[t.p6]}>
@@ -74,38 +70,46 @@ const Dashboard = () => {
 
         <View style={[t.bgWhite, t.roundedLg, t.p4, t.mB6, t.shadow]}>
           <Text style={[t.textLg, t.fontSemibold, t.mB4]}>Quick Actions</Text>
-          <View style={[t.flexRow, t.justifyBetween]}>
+          <View style={[t.flexWrap, t.flexRow, t.justifyBetween]}>
             <TouchableOpacity
-              style={[
-                t.p4,
-                t.bgGray100,
-                t.roundedFull,
-                t.itemsCenter,
-                t.justifyCenter,
-                t.mB2,
-                t.mX2,
-              ]}
-              onPress={() => handlePunch("in")}
+              style={[t.p4, t.bgGray200, t.roundedFull, t.itemsCenter, t.justifyCenter, t.mB2, t.mX2, { width: '44%' }]}
+              onPress={() => navigation.navigate('payRole')}
+
             >
-              <Ionicons name="log-in-outline" size={32} color="#FFA500" />
-              <Text style={[t.textGray700, t.textSm]}>Punch In</Text>
+              <Ionicons name="cash-outline" size={30} color="#FFA500" />
+              <Text style={[t.textGray700, t.textSm]}>Payroll</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                t.p4,
-                t.bgGray100,
-                t.roundedFull,
-                t.itemsCenter,
-                t.justifyCenter,
-                t.mB2,
-                t.mX2,
-              ]}
-              onPress={() => handlePunch("out")}
+              style={[t.p4, t.bgGray200, t.roundedFull, t.itemsCenter, t.justifyCenter, t.mB2, t.mX2, { width: '44%' }]}
+              onPress={() => navigation.navigate('leave')}
+
             >
-              <Ionicons name="log-out-outline" size={32} color="#FFA500" />
-              <Text style={[t.textGray700, t.textSm]}>Punch Out</Text>
+              <Ionicons name="time-outline" size={30} color="#FFA500" />
+              <Text style={[t.textGray700, t.textSm]}>Leave</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[t.p4, t.bgGray200, t.roundedFull, t.itemsCenter, t.justifyCenter, t.mB2, t.mX2, { width: '44%' }]}
+              onPress={() => navigation.navigate('chat')}
+
+            >
+              <Ionicons name="chatbubble-outline" size={30} color="#FFA500" />
+              <Text style={[t.textGray700, t.textSm]}>Communication</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[t.p4, t.bgGray200, t.roundedFull, t.itemsCenter, t.justifyCenter, t.mB2, t.mX2, { width: '44%' }]}
+              onPress={() => navigation.navigate('news')}
+
+            >
+              <Ionicons name="newspaper-outline" size={30} color="#FFA500" />
+              <Text style={[t.textGray700, t.textSm]}>News</Text>
             </TouchableOpacity>
           </View>
+
+        </View >
+
+        <View style={[t.bgWhite, t.roundedLg, t.p4, t.shadow, t.mB6,]}>
+          <Text style={[t.textLg, t.fontSemibold, t.mB4]}>My Activities</Text>
+          <View style={[t.textCenter]}><Actions /></View>
         </View>
 
         <View style={[t.bgWhite, t.roundedLg, t.p4, t.shadow]}>
@@ -113,8 +117,8 @@ const Dashboard = () => {
           <Text style={[t.textCenter, t.textSm]}>Pie chart placeholder</Text>
           {/* Add Pie Chart component here for React Native */}
         </View>
-      </View>
-    </ScrollView>
+      </View >
+    </ScrollView >
   );
 };
 

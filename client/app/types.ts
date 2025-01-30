@@ -10,6 +10,7 @@ export type RootStackParamList = {
   news: undefined;
   support: undefined;
   logout: undefined;
+  postlist: undefined;
 };
 
 export type NavigationProps = StackNavigationProp<RootStackParamList>;

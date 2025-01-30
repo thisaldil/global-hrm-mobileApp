@@ -5,8 +5,8 @@ import moment from "moment";
 import { Ionicons } from "@expo/vector-icons";
 import { t } from "react-native-tailwindcss";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Video from 'react-native-video';
-import CommentSection from "@/components/commentSection";
+import { Video } from "expo-av";
+// import CommentSection from "./commentSection";
 
 interface Post {
   id: string;
@@ -18,7 +18,7 @@ interface Post {
   likes: number;
 }
 
-const News = () => {
+const PostList = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [showAllComments, setShowAllComments] = useState<{ [key: string]: boolean }>({});
 
@@ -75,10 +75,9 @@ const News = () => {
               {item.attachment.endsWith(".mp4") || item.attachment.endsWith(".webm") ? (
                 <Video
                   source={{ uri: item.attachment }}
-                  style={{ width: '100%', height: 200, borderRadius: 10 }}
-                  controls
-                  resizeMode="contain" 
-                />
+                  style={{ width: "100%", height: 200, borderRadius: 10 }}
+                  useNativeControls
+                  />
               ) : (
                 <Image
                   source={{ uri: item.attachment }}
@@ -91,22 +90,22 @@ const News = () => {
 
           <Text style={[t.textSm, t.textGray500, t.mT2]}>{moment(item.created_at).format("LLL")}</Text>
 
-          <View style={[t.flexRow, t.mT4]}>
+          <View style={[t.flexRow, t.justifyBetween, t.mT4]}>
             <TouchableOpacity onPress={() => likePost(item.id)} style={[t.flexRow, t.itemsCenter]}>
               <Ionicons name={item.liked ? "heart" : "heart-outline"} size={20} color="red" />
               <Text style={[t.textGray700, t.mL2]}>{item.likes} Likes</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => setShowAllComments({ ...showAllComments, [item.id]: !showAllComments[item.id] })} style={[t.flexRow, t.itemsCenter, t.mL5]}>
+            <TouchableOpacity onPress={() => setShowAllComments({ ...showAllComments, [item.id]: !showAllComments[item.id] })} style={[t.flexRow, t.itemsCenter]}>
               <Ionicons name="chatbubble-outline" size={20} color="blue" />
             </TouchableOpacity>
           </View>
 
-          {showAllComments[item.id] && <CommentSection postId={item.id} />}
+          {/* {showAllComments[item.id] && <CommentSection postId={item.id} />} */}
         </View>
       )}
     />
   );
 };
 
-export default News;
+export default PostList;
