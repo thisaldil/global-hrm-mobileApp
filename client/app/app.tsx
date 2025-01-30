@@ -50,7 +50,7 @@ const App: React.FC = () => {
         <Stack.Screen name="news" component={News} />
         <Stack.Screen name="support" component={Support} />
         <Stack.Screen name="logout" component={Logout} />
-        <Stack.Screen name="dashboard" component={Dashboard} />
+        {/* <Stack.Screen name="dashboard" component={Dashboard} /> */}
       </Stack.Navigator>
     </NavigationContainer>
   );
