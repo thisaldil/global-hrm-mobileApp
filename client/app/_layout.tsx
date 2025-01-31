@@ -5,21 +5,16 @@ import Header from './layouts/header';
 import { Slot } from 'expo-router';
 
 const RootLayout = () => {
-  const segments = useSegments(); // Get the current route segments
-  const isLoginPage = segments?.[0] === 'login'; // Check if the first segment is "login"
+  const segments = useSegments();
+  const isHiddenPage = ['login', 'index'].includes(segments?.[0] ?? '');
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Conditionally render the Header */}
-      {!isLoginPage && <Header />}
-
-      {/* Render the child route */}
+      {!isHiddenPage && <Header />}
       <View style={{ flex: 1 }}>
         <Slot />
       </View>
-
-      {/* Conditionally render the Footer */}
-      {!isLoginPage && <Footer />}
+      {!isHiddenPage && <Footer />}
     </View>
   );
 };

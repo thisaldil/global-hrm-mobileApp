@@ -7,7 +7,7 @@ import { t } from 'react-native-tailwindcss';
 
 const Footer = () => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<string>('home'); // Track active tab
+  const [activeTab, setActiveTab] = useState<string>('dashboard'); // Track active tab
 
   const handlePress = (tabName: string, route: string) => {
     setActiveTab(tabName); // Update active tab
@@ -20,9 +20,9 @@ const Footer = () => {
   return (
     <View style={[t.flexRow, t.justifyAround, t.itemsCenter, t.bgWhite, t.p4, t.borderT, t.borderGray200]}>
       {/* Home Button */}
-      <TouchableOpacity onPress={() => handlePress('home', '../home')} style={[t.itemsCenter]}>
-        <Icon name="home-outline" size={24} style={{ color: activeTab === 'home' ? activeColor : defaultColor }} />
-        <Text style={{ fontSize: 12, color: activeTab === 'home' ? activeColor : defaultColor }}>Home</Text>
+      <TouchableOpacity onPress={() => handlePress('dashboard', '../dashboard')} style={[t.itemsCenter]}>
+        <Icon name="home-outline" size={24} style={{ color: activeTab === 'dashboard' ? activeColor : defaultColor }} />
+        <Text style={{ fontSize: 12, color: activeTab === 'dashboard' ? activeColor : defaultColor }}>Dashboard</Text>
       </TouchableOpacity>
 
       {/* Reminder Button */}
