@@ -39,10 +39,13 @@ const Index = () => {
 
   return (
     <View style={styles.container}>
+      {/* Logo Image */}
       <Image
-        source={require("../assets/images/logo2.png")}
+        source={require("../assets/images/logo2.png")} // Ensure path is correct
         style={styles.logo}
       />
+
+      {/* Welcome Text */}
       <Text>Welcome to</Text>
       <Text style={styles.title}>GLOBAL HRM MOBILE!</Text>
     </View>
