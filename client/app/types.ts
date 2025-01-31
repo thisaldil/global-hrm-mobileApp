@@ -11,6 +11,10 @@ export type RootStackParamList = {
   support: undefined;
   logout: undefined;
   postlist: undefined;
+  AccountSecurity: undefined;
+  WorkInformation: undefined;
+  PersonalDetails: undefined;
+  Resume: undefined;
 };
 
 export type NavigationProps = StackNavigationProp<RootStackParamList>;

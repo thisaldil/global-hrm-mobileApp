@@ -4,14 +4,13 @@ import {
   View,
   Text,
   TouchableOpacity,
-  TextInput,
   Image,
   StyleSheet,
   Modal,
   Alert,
 } from "react-native";
-import { FaCamera } from "react-icons/fa"; // Keep icon imports for reference
 import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
 import AccountSecurity from "./profileComponents/AccountSecurity";
 import PersonalDetails from "./profileComponents/PersonalDetails";
@@ -27,30 +26,51 @@ const Profile = () => {
   const [workDetails, setWorkDetails] = useState({});
   const [personalDetails, setPersonalDetails] = useState({});
   const [empId, setEmpId] = useState(null); // Assuming you fetch empId from AsyncStorage or some other source
+  const API_BASE_URL = "https://global-hrm-mobile-server.vercel.app";
+
+  useEffect(() => {
+    const fetchEmpId = async () => {
+      try {
+        const storedEmpId = await AsyncStorage.getItem("empId");
+        if (storedEmpId) {
+          setEmpId(storedEmpId);
+        }
+      } catch (err) {
+        console.error("Error fetching empId from storage:", err);
+      }
+    };
+    fetchEmpId();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!empId) return;
       try {
         const personalResponse = await axios.get(
-          `https://global-hrm-mobile-server.vercel.app/employees/getPersonalDetails/${empId}`
+          `${API_BASE_URL}/employees/getPersonalDetails/${empId}`
         );
         setPersonalDetails(personalResponse.data);
-        if (personalResponse.data.profilepic) {
-          setAvatar(`${API_BASE_URL}${personalResponse.data.profilepic}`);
-        }
+        const profilePicUrl = personalResponse.data.profilepic;
 
+        if (profilePicUrl) {
+          setAvatar(
+            `https://global-hrm-mobile-server.vercel.app${profilePicUrl}`
+          );
+          // Assuming the image URL is relative
+        } else {
+          setAvatar(
+            "https://global-hrm-mobile-server.vercel.app/images/avatar.png"
+          ); // Fallback avatar
+        }
         const workResponse = await axios.get(
-          `https://global-hrm-mobile-server.vercel.app/employees/getWorkDetails/${empId}`
+          `${API_BASE_URL}/employees/getWorkDetails/${empId}`
         );
         setWorkDetails(workResponse.data);
       } catch (err) {
-        console.log("Error fetching data:", err);
+        console.error("Error fetching data:", err);
       }
     };
-
-    if (empId) {
-      fetchData();
-    }
+    fetchData();
   }, [empId]);
 
   const handleFileChange = async () => {
@@ -116,7 +136,10 @@ const Profile = () => {
               <TouchableOpacity
                 onPress={() => setIsModalVisible(false)}
                 style={styles.closeModalButton}
-              />
+              >
+                <AntDesign name="close" style={styles.closeModalIcon} />
+              </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={handleFileChange}
                 style={styles.changeAvatarButton}
@@ -133,9 +156,7 @@ const Profile = () => {
           <Text style={styles.infoText}>
             Supervisor: {workDetails.supervisor}
           </Text>
-          <Text style={styles.infoText}>
-            Work Email: {workDetails.workEmail}
-          </Text>
+          <Text style={styles.infoText}>Email: {workDetails.workEmail}</Text>
           <Text style={styles.infoText}>
             Work Phone: {workDetails.workPhone}
           </Text>
@@ -147,13 +168,13 @@ const Profile = () => {
           onPress={() => handleSectionToggle("account")}
           style={styles.sectionButton}
         >
-          <Text style={styles.buttonText}>Account Security</Text>
+          <Text style={styles.buttonText}>Security</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleSectionToggle("work")}
           style={styles.sectionButton}
         >
-          <Text style={styles.buttonText}>Work Information</Text>
+          <Text style={styles.buttonText}>Work </Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleSectionToggle("resume")}
@@ -165,7 +186,7 @@ const Profile = () => {
           onPress={() => handleSectionToggle("personal")}
           style={styles.sectionButton}
         >
-          <Text style={styles.buttonText}>Personal Details</Text>
+          <Text style={styles.buttonText}>Personal</Text>
         </TouchableOpacity>
       </View>
 
@@ -176,35 +197,35 @@ const Profile = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#f4f4f4",
   },
   profileContainer: {
     flexDirection: "row",
-    backgroundColor: "white",
+    backgroundColor: "#ffffff",
     padding: 16,
-    borderRadius: 8,
-    shadowColor: "rgba(0, 0, 0, 0.1)",
-    shadowOffset: { width: 0, height: 4 },
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowRadius: 4,
+    elevation: 4,
+    alignItems: "center",
   },
   avatarSection: {
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 20,
+    marginRight: 16,
   },
   avatarWrapper: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     overflow: "hidden",
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: "#ff7f50",
     justifyContent: "center",
     alignItems: "center",
@@ -212,65 +233,91 @@ const styles = StyleSheet.create({
   avatar: {
     width: "100%",
     height: "100%",
-    borderRadius: 60,
+    borderRadius: 50,
   },
   profileInfo: {
-    justifyContent: "center",
+    flex: 1,
   },
   nameText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
+    color: "#333",
   },
   designationText: {
     fontSize: 16,
-    color: "#555",
-    marginVertical: 5,
+    color: "#666",
+    marginVertical: 4,
   },
   infoText: {
     fontSize: 14,
-    color: "#777",
+    color: "#888",
   },
   sectionButtons: {
     marginTop: 20,
     flexDirection: "row",
-    justifyContent: "space-evenly",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   sectionButton: {
-    padding: 10,
+    flex: 1,
+    paddingVertical: 12,
+    margin: 6,
     backgroundColor: "#ff7f50",
-    borderRadius: 20,
+    borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
-    marginHorizontal: 5,
   },
   buttonText: {
-    color: "white",
+    color: "#fff",
     fontSize: 16,
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Slightly lighter overlay
   },
   closeModalButton: {
     position: "absolute",
-    top: 20,
-    right: 20,
+    top: 30,
+    right: 30,
     width: 40,
     height: 40,
-    backgroundColor: "red",
     borderRadius: 20,
+    backgroundColor: "#fff", // Light background for visibility
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5, // For Android shadow
   },
+
+  closeModalIcon: {
+    fontSize: 24,
+    color: "#FF6347", // Icon color matching the button's color
+  },
+
   changeAvatarButton: {
-    padding: 15,
-    backgroundColor: "#ff7f50",
-    borderRadius: 30,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    backgroundColor: "#FF6347", // Softer red color
+    borderRadius: 50, // Full rounded button
+    marginTop: 20,
+    shadowColor: "#000", // Adding shadow for a floating effect
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5, // For Android shadow effect
   },
+
   changeAvatarText: {
-    color: "white",
-    fontSize: 18,
+    color: "#fff",
+    fontSize: 20, // Larger text for better readability
+    fontWeight: "600",
+    textAlign: "center", // Center the text
   },
 });
 

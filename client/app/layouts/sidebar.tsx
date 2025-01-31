@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -9,18 +8,11 @@ import {
   Animated,
 } from "react-native";
 import Modal from "react-native-modal";
-import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons"; // Using Ionicons
-
-// Type definition for your navigation routes
-type RootStackParamList = {
-  payRole: undefined;
-  leave: undefined;
-  chat: undefined;
-  news: undefined;
-  support: undefined;
-  logout: undefined;
-};
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../types";
 
 const Sidebar = ({
   isVisible,
@@ -29,20 +21,7 @@ const Sidebar = ({
   isVisible: boolean;
   toggleSidebar: () => void;
 }) => {
-  const navigation = useNavigation<any>(); // Use any to avoid types issues, or you can use typed navigation: useNavigation<StackNavigationProp<RootStackParamList>>
-
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
-import Modal from 'react-native-modal';
-import Icon from 'react-native-vector-icons/Ionicons'; // Using Ionicons
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StackNavigationProp } from "@react-navigation/stack";
-import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "../types";
-
-const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSidebar: () => void }) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-
   const [iconPosition] = useState(new Animated.Value(-80)); // Start the icon above the sidebar
   const [activeItem, setActiveItem] = useState<string>(""); // Track active menu item
   const activeColor = "#f1823d"; // Active color
@@ -63,10 +42,13 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
     toggleSidebar();
   };
 
-  const handleLogout = async (item: string, route: keyof RootStackParamList) => {
+  const handleLogout = async (
+    item: string,
+    route: keyof RootStackParamList
+  ) => {
     setActiveItem(item);
     await AsyncStorage.clear();
-    console.log('Local Storage cleared!');
+    console.log("Local Storage cleared!");
     navigation.navigate(route);
     toggleSidebar();
   };
@@ -82,35 +64,27 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
       animationOut="slideOutRight"
     >
       <View style={styles.sidebar}>
-
         {/* Logo at the Top-Right */}
         <View style={styles.logoContainer}>
           <Image
             source={require("../../assets/images/logo2.png")}
             style={styles.logo}
           />
-
-
-        {/* Logo at the Top-Right */}
-        <View style={styles.logoContainer}>
-          <Image source={require('../../assets/images/logo2.png')} style={styles.logo} />
-
         </View>
 
         {/* Main Menu Items */}
         <View style={styles.menuContainer}>
           <TouchableOpacity
             style={styles.menuItem}
-
             onPress={() => handlePress("payRole", "payRole")}
-
           >
             <Icon
               name="cash-outline"
               size={24}
-
-              style={[styles.icon, activeItem === 'payRole' && { color: activeColor }]}
-
+              style={[
+                styles.icon,
+                activeItem === "payRole" && { color: activeColor },
+              ]}
             />
             <Text
               style={[
@@ -124,19 +98,15 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
 
           <TouchableOpacity
             style={styles.menuItem}
-
             onPress={() => handlePress("leave", "leave")}
-
           >
             <Icon
               name="time-outline"
               size={24}
-
               style={[
                 styles.icon,
                 activeItem === "leave" && { color: activeColor },
               ]}
-
             />
             <Text
               style={[
@@ -150,34 +120,37 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
 
           <TouchableOpacity
             style={styles.menuItem}
-
             onPress={() => handlePress("chat", "chat")}
-
-           
-
           >
             <Icon
               name="chatbubble-outline"
               size={24}
-
-              style={[styles.icon, activeItem === 'chat' && { color: activeColor }]}
+              style={[
+                styles.icon,
+                activeItem === "chat" && { color: activeColor },
+              ]}
             />
-            <Text style={[styles.menuText, activeItem === 'chat' && { color: activeColor }]}>Communication</Text>
-
+            <Text
+              style={[
+                styles.menuText,
+                activeItem === "chat" && { color: activeColor },
+              ]}
+            >
+              Communication
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.menuItem}
-
-            onPress={() => handlePress('news', 'news')}
-
+            onPress={() => handlePress("news", "news")}
           >
             <Icon
               name="newspaper-outline"
               size={24}
-
-              style={[styles.icon, activeItem === 'news' && { color: activeColor }]}
-
+              style={[
+                styles.icon,
+                activeItem === "news" && { color: activeColor },
+              ]}
             />
             <Text
               style={[
@@ -194,16 +167,15 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
 
           <TouchableOpacity
             style={styles.menuItem}
-
-            onPress={() => handlePress('help', 'support')}
-
+            onPress={() => handlePress("help", "support")}
           >
             <Icon
               name="help-circle-outline"
               size={24}
-
-              style={[styles.icon, activeItem === 'help' && { color: activeColor }]}
-
+              style={[
+                styles.icon,
+                activeItem === "help" && { color: activeColor },
+              ]}
             />
             <Text
               style={[
@@ -220,16 +192,16 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
         <View style={styles.bottomMenu}>
           <TouchableOpacity
             style={styles.menuItem}
-
-            onPress={() => handleLogout('logout', 'login')}
-
+            onPress={() => handleLogout("logout", "login")}
           >
             <Icon
               name="log-out-outline"
               size={24}
-
-              style={[styles.icon, styles.logoutIcon, activeItem === 'logout' && { color: activeColor }]}
-
+              style={[
+                styles.icon,
+                styles.logoutIcon,
+                activeItem === "logout" && { color: activeColor },
+              ]}
             />
             <Text
               style={[
