@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import LeaveRequest from '../components/leaverequest';
-import LeaveAnalysis from '../components/leaveanalysis';
 import MyLeaves from '../components/myleaves';
 
 const LeaveAndAttendance = () => {
@@ -30,19 +29,10 @@ const LeaveAndAttendance = () => {
                         My Leaves
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                    onPress={() => handleSectionToggle('attendance')} 
-                    style={[styles.button, visibleSection === 'attendance' && styles.activeButton]}
-                >
-                    <Text style={[styles.buttonText, visibleSection === 'attendance' && styles.activeButtonText]}>
-                        Leave Analysis
-                    </Text>
-                </TouchableOpacity>
             </View>
 
             {visibleSection === 'leave' && <LeaveRequest />}
             {visibleSection === 'myleaves' && <MyLeaves />}
-            {visibleSection === 'attendance' && <LeaveAnalysis />}
         </View>
     );
 };
@@ -55,9 +45,8 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         flexDirection: 'row',
-        marginVertical: 30,
-        gap: 5,
-        marginLeft: 8,
+        marginVertical: 20,
+        gap: 20,
     },
     button: {
         paddingVertical: 7,
