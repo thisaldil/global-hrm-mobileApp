@@ -1,8 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
-import Modal from 'react-native-modal';
-import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons'; // Using Ionicons
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Animated,
+} from "react-native";
+import Modal from "react-native-modal";
+import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/Ionicons"; // Using Ionicons
 
 // Type definition for your navigation routes
 type RootStackParamList = {
@@ -14,11 +21,17 @@ type RootStackParamList = {
   logout: undefined;
 };
 
-const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSidebar: () => void }) => {
-  const navigation = useNavigation<any>(); // Use any to avoid types issues, or you can use typed navigation: useNavigation<StackNavigationProp<RootStackParamList>> 
+const Sidebar = ({
+  isVisible,
+  toggleSidebar,
+}: {
+  isVisible: boolean;
+  toggleSidebar: () => void;
+}) => {
+  const navigation = useNavigation<any>(); // Use any to avoid types issues, or you can use typed navigation: useNavigation<StackNavigationProp<RootStackParamList>>
   const [iconPosition] = useState(new Animated.Value(-80)); // Start the icon above the sidebar
-  const [activeItem, setActiveItem] = useState<string>(''); // Track active menu item
-  const activeColor = '#f1823d'; // Active color
+  const [activeItem, setActiveItem] = useState<string>(""); // Track active menu item
+  const activeColor = "#f1823d"; // Active color
 
   useEffect(() => {
     // Animate the hamburger menu icon's position
@@ -37,100 +50,164 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
   };
 
   return (
-    <Modal 
-      isVisible={isVisible} 
-      style={styles.modal} 
-      onBackdropPress={toggleSidebar} 
-      swipeDirection="right" 
+    <Modal
+      isVisible={isVisible}
+      style={styles.modal}
+      onBackdropPress={toggleSidebar}
+      swipeDirection="right"
       onSwipeComplete={toggleSidebar}
-      animationIn="slideInRight" 
+      animationIn="slideInRight"
       animationOut="slideOutRight"
     >
       <View style={styles.sidebar}>
-        
         {/* Logo at the Top-Right */}
         <View style={styles.logoContainer}>
-          <Image source={require('E:/global-hrm-mobile/client/assets/images/logo2.png')} style={styles.logo} />
+          <Image
+            source={require("../../assets/images/logo2.png")}
+            style={styles.logo}
+          />
         </View>
 
         {/* Main Menu Items */}
         <View style={styles.menuContainer}>
-          <TouchableOpacity 
-            style={styles.menuItem} 
-            onPress={() => handlePress('payRole', 'payRole')}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => handlePress("payRole", "payRole")}
           >
-            <Icon 
-              name="cash-outline" 
-              size={24} 
-              style={[styles.icon, activeItem === 'payRole' && { color: activeColor }]} 
+            <Icon
+              name="cash-outline"
+              size={24}
+              style={[
+                styles.icon,
+                activeItem === "payRole" && { color: activeColor },
+              ]}
             />
-            <Text style={[styles.menuText, activeItem === 'payRole' && { color: activeColor }]}>Pay Role</Text>
+            <Text
+              style={[
+                styles.menuText,
+                activeItem === "payRole" && { color: activeColor },
+              ]}
+            >
+              Pay Role
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.menuItem} 
-            onPress={() => handlePress('leave', 'leave')}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => handlePress("leave", "leave")}
           >
-            <Icon 
-              name="time-outline" 
-              size={24} 
-              style={[styles.icon, activeItem === 'leave' && { color: activeColor }]} 
+            <Icon
+              name="time-outline"
+              size={24}
+              style={[
+                styles.icon,
+                activeItem === "leave" && { color: activeColor },
+              ]}
             />
-            <Text style={[styles.menuText, activeItem === 'leave' && { color: activeColor }]}>Leave & Attendance</Text>
+            <Text
+              style={[
+                styles.menuText,
+                activeItem === "leave" && { color: activeColor },
+              ]}
+            >
+              Leave & Attendance
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.menuItem} 
-            onPress={() => handlePress('chat', 'chat')}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => handlePress("chat", "chat")}
           >
-            <Icon 
-              name="chatbubble-outline" 
-              size={24} 
-              style={[styles.icon, activeItem === 'chat' && { color: activeColor }]} 
+            <Icon
+              name="chatbubble-outline"
+              size={24}
+              style={[
+                styles.icon,
+                activeItem === "chat" && { color: activeColor },
+              ]}
             />
-            <Text style={[styles.menuText, activeItem === 'chat' && { color: activeColor }]}>Chats</Text>
+            <Text
+              style={[
+                styles.menuText,
+                activeItem === "chat" && { color: activeColor },
+              ]}
+            >
+              Chats
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.menuItem} 
-            onPress={() => handlePress('news', 'news')}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => handlePress("news", "news")}
           >
-            <Icon 
-              name="newspaper-outline" 
-              size={24} 
-              style={[styles.icon, activeItem === 'news' && { color: activeColor }]} 
+            <Icon
+              name="newspaper-outline"
+              size={24}
+              style={[
+                styles.icon,
+                activeItem === "news" && { color: activeColor },
+              ]}
             />
-            <Text style={[styles.menuText, activeItem === 'news' && { color: activeColor }]}>News</Text>
+            <Text
+              style={[
+                styles.menuText,
+                activeItem === "news" && { color: activeColor },
+              ]}
+            >
+              News
+            </Text>
           </TouchableOpacity>
 
           {/* Separator Line */}
           <View style={styles.separator} />
 
-          <TouchableOpacity 
-            style={styles.menuItem} 
-            onPress={() => handlePress('help', 'support')}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => handlePress("help", "support")}
           >
-            <Icon 
-              name="help-circle-outline" 
-              size={24} 
-              style={[styles.icon, activeItem === 'help' && { color: activeColor }]} 
+            <Icon
+              name="help-circle-outline"
+              size={24}
+              style={[
+                styles.icon,
+                activeItem === "help" && { color: activeColor },
+              ]}
             />
-            <Text style={[styles.menuText, activeItem === 'help' && { color: activeColor }]}>Support</Text>
+            <Text
+              style={[
+                styles.menuText,
+                activeItem === "help" && { color: activeColor },
+              ]}
+            >
+              Support
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Bottom Section - Logout */}
         <View style={styles.bottomMenu}>
-          <TouchableOpacity 
-            style={styles.menuItem} 
-            onPress={() => handlePress('logout', 'logout')}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => handlePress("logout", "logout")}
           >
-            <Icon 
-              name="log-out-outline" 
-              size={24} 
-              style={[styles.icon, styles.logoutIcon, activeItem === 'logout' && { color: activeColor }]} 
+            <Icon
+              name="log-out-outline"
+              size={24}
+              style={[
+                styles.icon,
+                styles.logoutIcon,
+                activeItem === "logout" && { color: activeColor },
+              ]}
             />
-            <Text style={[styles.menuText, styles.logoutText, activeItem === 'logout' && { color: activeColor }]}>Log Out</Text>
+            <Text
+              style={[
+                styles.menuText,
+                styles.logoutText,
+                activeItem === "logout" && { color: activeColor },
+              ]}
+            >
+              Log Out
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -153,11 +230,14 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
           {/* White square behind the icon */}
           <View style={styles.hamburgerBackground}>
             <TouchableOpacity onPress={toggleSidebar}>
-              <Icon name="menu-outline" size={30} style={styles.hamburgerIcon} />
+              <Icon
+                name="menu-outline"
+                size={30}
+                style={styles.hamburgerIcon}
+              />
             </TouchableOpacity>
           </View>
         </Animated.View>
-
       </View>
     </Modal>
   );
@@ -166,13 +246,13 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean, toggleSideb
 const styles = StyleSheet.create({
   sidebar: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 20,
     paddingTop: 20, // Increased top padding
     width: 250, // Sidebar width
     borderTopLeftRadius: 17, // Rounded top-left
     borderBottomLeftRadius: 17, // Rounded bottom-left
-    shadowColor: '#000', // Shadow color
+    shadowColor: "#000", // Shadow color
     shadowOffset: { width: -3, height: 3 }, // Shadow direction
     shadowOpacity: 0.2, // Shadow visibility
     shadowRadius: 5, // Spread of shadow
@@ -180,66 +260,66 @@ const styles = StyleSheet.create({
   },
   modal: {
     margin: 0,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end', // Align the sidebar to the right
+    justifyContent: "flex-start",
+    alignItems: "flex-end", // Align the sidebar to the right
   },
   logoContainer: {
-    alignItems: 'flex-end', // Aligns logo to the right
+    alignItems: "flex-end", // Aligns logo to the right
     marginBottom: 10, // Space below logo
   },
   logo: {
     width: 40, // Adjust width
     height: 40, // Adjust height
-    resizeMode: 'contain', // Keep aspect ratio
+    resizeMode: "contain", // Keep aspect ratio
   },
   menuContainer: {
     flex: 1, // Push the bottom items down
   },
   separator: {
     height: 1,
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
     marginVertical: 10,
   },
   bottomMenu: {
     paddingTop: 10, // Increased top padding for bottom section
   },
   menuItem: {
-    flexDirection: 'row', // Align the icon and text horizontally
-    alignItems: 'center', // Center the items vertically
+    flexDirection: "row", // Align the icon and text horizontally
+    alignItems: "center", // Center the items vertically
     paddingVertical: 20, // Increased top padding for each item
   },
   icon: {
     marginRight: 10, // Space between icon and text
-    color: '#027b92', // Dark blue color
+    color: "#027b92", // Dark blue color
   },
   menuText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#02c3cc', // Dark blue text
+    fontWeight: "bold",
+    color: "#02c3cc", // Dark blue text
   },
   logoutText: {
-    color: '#d9534f', // Red color for logout
+    color: "#d9534f", // Red color for logout
   },
   logoutIcon: {
-    color: '#d9534f', // Red color for logout icon
+    color: "#d9534f", // Red color for logout icon
   },
   hamburgerContainer: {
-    position: 'absolute',
+    position: "absolute",
     left: -20, // Move icon outside the sidebar by 25px
     top: 15, // Keep it at the top of the sidebar
     zIndex: 999, // Make sure it's above other elements
   },
   hamburgerBackground: {
-    backgroundColor: '#fff', // White square background
+    backgroundColor: "#fff", // White square background
     width: 40, // Square size
     height: 40, // Square size
     borderRadius: 8, // Rounded corners for the square
-    justifyContent: 'center', // Center the icon inside the square
-    alignItems: 'center', // Center the icon inside the square
+    justifyContent: "center", // Center the icon inside the square
+    alignItems: "center", // Center the icon inside the square
     elevation: 5, // Android shadow
   },
   hamburgerIcon: {
-    color: '#02c3cc', // Dark blue color for hamburger icon
+    color: "#02c3cc", // Dark blue color for hamburger icon
   },
 });
 

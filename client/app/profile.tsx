@@ -1,36 +1,46 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
   View,
   Text,
   TouchableOpacity,
+  TextInput,
   Image,
-  Alert,
   StyleSheet,
+  Modal,
+  Alert,
 } from "react-native";
+import { FaCamera } from "react-icons/fa"; // Keep icon imports for reference
 import * as ImagePicker from "expo-image-picker";
-import axios from "axios";
-import { useNavigation } from "@react-navigation/native";
+import { AntDesign } from "@expo/vector-icons";
+import AccountSecurity from "./profileComponents/AccountSecurity";
+import PersonalDetails from "./profileComponents/PersonalDetails";
+import WorkInformation from "./profileComponents/WorkInformation";
+import Resume from "./profileComponents/Resume";
 
-const ProfileScreen = () => {
-  const [avatar, setAvatar] = useState(null);
-  const [personalDetails, setPersonalDetails] = useState({});
+const Profile = () => {
+  const [visibleSection, setVisibleSection] = useState("account");
+  const [avatar, setAvatar] = useState(
+    "https://global-hrm-mobile-server.vercel.app/images/avatar.png"
+  );
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [workDetails, setWorkDetails] = useState({});
-  const empId = "12345"; // Replace with AsyncStorage stored empId
-  const navigation = useNavigation();
+  const [personalDetails, setPersonalDetails] = useState({});
+  const [empId, setEmpId] = useState(null); // Assuming you fetch empId from AsyncStorage or some other source
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const personalResponse = await axios.get(
-          `http://localhost:4000/employees/getPersonalDetails/${empId}`
+          `https://global-hrm-mobile-server.vercel.app/employees/getPersonalDetails/${empId}`
         );
         setPersonalDetails(personalResponse.data);
         if (personalResponse.data.profilepic) {
-          setAvatar(`http://localhost:4000${personalResponse.data.profilepic}`);
+          setAvatar(`${API_BASE_URL}${personalResponse.data.profilepic}`);
         }
 
         const workResponse = await axios.get(
-          `http://localhost:4000/employees/getWorkDetails/${empId}`
+          `https://global-hrm-mobile-server.vercel.app/employees/getWorkDetails/${empId}`
         );
         setWorkDetails(workResponse.data);
       } catch (err) {
@@ -38,99 +48,131 @@ const ProfileScreen = () => {
       }
     };
 
-    fetchData();
+    if (empId) {
+      fetchData();
+    }
   }, [empId]);
 
-  const handleImagePick = async () => {
-    let permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
-      Alert.alert(
-        "Permission Required",
-        "You need to allow access to your photos."
-      );
-      return;
-    }
-
-    let pickerResult = await ImagePicker.launchImageLibraryAsync({
+  const handleFileChange = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
 
-    if (!pickerResult.canceled) {
-      const file = pickerResult.assets[0];
-      setAvatar(file.uri);
-      uploadProfileImage(file.uri);
+    if (!result.cancelled) {
+      setAvatar(result.uri);
+      // Here you can upload the selected image to your server using FormData and axios
+      try {
+        const formData = new FormData();
+        formData.append("profilePic", {
+          uri: result.uri,
+          type: "image/jpeg", // Adjust the type based on selected image
+          name: "profilePic.jpg",
+        });
+
+        await axios.post(
+          `https://global-hrm-mobile-server.vercel.app/employees/uploadProfileImage/${empId}`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        Alert.alert(
+          "Profile Picture Updated",
+          "Your profile picture has been updated successfully."
+        );
+      } catch (err) {
+        console.log("Error uploading profile image:", err);
+      }
     }
   };
 
-  const uploadProfileImage = async (imageUri) => {
-    const formData = new FormData();
-    formData.append("profilePic", {
-      uri: imageUri,
-      type: "image/jpeg",
-      name: "profile.jpg",
-    });
-
-    try {
-      await axios.post(
-        `http://localhost:4000/employees/uploadProfileImage/${empId}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      Alert.alert("Success", "Profile image updated successfully.");
-    } catch (err) {
-      console.log("Error uploading profile image:", err);
-      Alert.alert("Error", "Failed to upload profile image.");
-    }
+  const handleSectionToggle = (section) => {
+    setVisibleSection(visibleSection === section ? null : section);
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={handleImagePick}
-        style={styles.avatarContainer}
-      >
-        <Image
-        // source={avatar ? { uri: avatar } : require("../assets/avatar.png")}
-        // style={styles.avatar}
-        />
-      </TouchableOpacity>
-      <Text style={styles.name}>{personalDetails.name}</Text>
-      <Text style={styles.designation}>{workDetails.designation}</Text>
+      <View style={styles.profileContainer}>
+        <View style={styles.avatarSection}>
+          <TouchableOpacity onPress={() => setIsModalVisible(true)}>
+            <View style={styles.avatarWrapper}>
+              <Image source={{ uri: avatar }} style={styles.avatar} />
+            </View>
+          </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("AccountSecurity")}
-      >
-        <Text style={styles.buttonText}>Account Security</Text>
-      </TouchableOpacity>
+          <Modal
+            visible={isModalVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setIsModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <TouchableOpacity
+                onPress={() => setIsModalVisible(false)}
+                style={styles.closeModalButton}
+              />
+              <TouchableOpacity
+                onPress={handleFileChange}
+                style={styles.changeAvatarButton}
+              >
+                <Text style={styles.changeAvatarText}>Change Avatar</Text>
+              </TouchableOpacity>
+            </View>
+          </Modal>
+        </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("WorkInformation")}
-      >
-        <Text style={styles.buttonText}>Work Information</Text>
-      </TouchableOpacity>
+        <View style={styles.profileInfo}>
+          <Text style={styles.nameText}>{personalDetails.name}</Text>
+          <Text style={styles.designationText}>{workDetails.designation}</Text>
+          <Text style={styles.infoText}>
+            Supervisor: {workDetails.supervisor}
+          </Text>
+          <Text style={styles.infoText}>
+            Work Email: {workDetails.workEmail}
+          </Text>
+          <Text style={styles.infoText}>
+            Work Phone: {workDetails.workPhone}
+          </Text>
+        </View>
+      </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("PersonalDetails")}
-      >
-        <Text style={styles.buttonText}>Personal Details</Text>
-      </TouchableOpacity>
+      <View style={styles.sectionButtons}>
+        <TouchableOpacity
+          onPress={() => handleSectionToggle("account")}
+          style={styles.sectionButton}
+        >
+          <Text style={styles.buttonText}>Account Security</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleSectionToggle("work")}
+          style={styles.sectionButton}
+        >
+          <Text style={styles.buttonText}>Work Information</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleSectionToggle("resume")}
+          style={styles.sectionButton}
+        >
+          <Text style={styles.buttonText}>Resume</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleSectionToggle("personal")}
+          style={styles.sectionButton}
+        >
+          <Text style={styles.buttonText}>Personal Details</Text>
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("Resume")}
-      >
-        <Text style={styles.buttonText}>Resume</Text>
-      </TouchableOpacity>
+      {visibleSection === "account" && <AccountSecurity />}
+      {visibleSection === "personal" && <PersonalDetails />}
+      {visibleSection === "work" && <WorkInformation />}
+      {visibleSection === "resume" && <Resume />}
     </View>
   );
 };
@@ -138,44 +180,98 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
+    padding: 16,
+    backgroundColor: "#f8f8f8",
   },
-  avatarContainer: {
-    marginTop: 20,
-    borderRadius: 100,
+  profileContainer: {
+    flexDirection: "row",
+    backgroundColor: "white",
+    padding: 16,
+    borderRadius: 8,
+    shadowColor: "rgba(0, 0, 0, 0.1)",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  avatarSection: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 20,
+  },
+  avatarWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     overflow: "hidden",
-    borderWidth: 3,
-    borderColor: "#FFA500",
+    borderWidth: 4,
+    borderColor: "#ff7f50",
+    justifyContent: "center",
+    alignItems: "center",
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: "100%",
+    height: "100%",
+    borderRadius: 60,
   },
-  name: {
-    fontSize: 22,
+  profileInfo: {
+    justifyContent: "center",
+  },
+  nameText: {
+    fontSize: 24,
     fontWeight: "bold",
-    marginVertical: 10,
   },
-  designation: {
-    fontSize: 18,
-    color: "gray",
+  designationText: {
+    fontSize: 16,
+    color: "#555",
+    marginVertical: 5,
   },
-  button: {
-    marginTop: 15,
-    backgroundColor: "#FFA500",
+  infoText: {
+    fontSize: 14,
+    color: "#777",
+  },
+  sectionButtons: {
+    marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+  },
+  sectionButton: {
     padding: 10,
-    borderRadius: 10,
-    width: "80%",
+    backgroundColor: "#ff7f50",
+    borderRadius: 20,
     alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+    marginHorizontal: 5,
   },
   buttonText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  closeModalButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
+    backgroundColor: "red",
+    borderRadius: 20,
+  },
+  changeAvatarButton: {
+    padding: 15,
+    backgroundColor: "#ff7f50",
+    borderRadius: 30,
+  },
+  changeAvatarText: {
+    color: "white",
+    fontSize: 18,
   },
 });
 
-export default ProfileScreen;
+export default Profile;

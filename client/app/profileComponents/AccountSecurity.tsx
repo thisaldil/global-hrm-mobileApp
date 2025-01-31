@@ -19,6 +19,9 @@ const AccountSecurity = () => {
   const [error, setError] = useState(null);
   const [empId, setEmpId] = useState("");
 
+  // Replace with your backend IP address if testing on a mobile device
+  const API_BASE_URL = "https://global-hrm-mobile-server.vercel.app"; // Change to your backend IP
+
   // Password validation logic
   const validatePassword = (password) => {
     const regex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*[0-9]).{8,}$/;
@@ -28,7 +31,7 @@ const AccountSecurity = () => {
   useEffect(() => {
     const fetchEmpId = async () => {
       const storedEmpId = await AsyncStorage.getItem("empId");
-      setEmpId(storedEmpId);
+      setEmpId(storedEmpId || ""); // Prevent `null` value issues
     };
 
     fetchEmpId();
@@ -38,8 +41,9 @@ const AccountSecurity = () => {
     const fetchEmail = async () => {
       try {
         if (empId) {
+          // Only fetch email if empId exists
           const response = await axios.get(
-            `http://localhost:4000/employees/getEmployee/${empId}`
+            `${API_BASE_URL}/employees/getEmployee/${empId}`
           );
           setEmail(response.data.email || "");
         }
@@ -52,18 +56,19 @@ const AccountSecurity = () => {
   }, [empId]);
 
   const handleSendResetCode = async () => {
+    setError(null); // Clear previous errors
     try {
       const res = await axios.post(
-        "http://localhost:4000/employees/requestPasswordReset",
+        `${API_BASE_URL}/employees/requestPasswordReset`,
         { email }
       );
       if (res.status === 200) {
         setEditable(true);
         Alert.alert("Success", "Reset code sent successfully.");
       }
-    } catch (error) {
+    } catch (err) {
       setError("Failed to send reset code. Please try again.");
-      console.log("Error sending reset code:", error);
+      console.log("Error sending reset code:", err);
     }
   };
 
@@ -83,13 +88,10 @@ const AccountSecurity = () => {
     }
 
     try {
-      const res = await axios.post(
-        "http://localhost:4000/employees/resetPassword",
-        {
-          resetCode,
-          newPassword,
-        }
-      );
+      const res = await axios.post(`${API_BASE_URL}/employees/resetPassword`, {
+        resetCode,
+        newPassword,
+      });
 
       if (res.status === 200) {
         setEditable(false);
@@ -98,9 +100,9 @@ const AccountSecurity = () => {
         setResetCode("");
         Alert.alert("Success", "Password updated successfully.");
       }
-    } catch (error) {
+    } catch (err) {
       setError("Failed to reset password. Please try again.");
-      console.log("Error resetting password:", error);
+      console.log("Error resetting password:", err);
     }
   };
 
