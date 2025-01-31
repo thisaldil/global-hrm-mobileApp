@@ -50,17 +50,18 @@ const LeaveAndAttendance = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        padding: 30,
         backgroundColor: '#fff',
     },
     buttonContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginVertical: 20,
+        marginVertical: 30,
+        gap: 5,
+        marginLeft: 8,
     },
     button: {
-        paddingVertical: 10,
-        paddingHorizontal: 20,
+        paddingVertical: 7,
+        paddingHorizontal: 15,
         borderWidth: 2,
         borderColor: '#fa7c10',
         borderRadius: 25,
