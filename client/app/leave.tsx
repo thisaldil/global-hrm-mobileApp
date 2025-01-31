@@ -40,7 +40,7 @@ const LeaveAndAttendance = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        padding: 30,
         backgroundColor: '#fff',
     },
     buttonContainer: {
@@ -49,8 +49,8 @@ const styles = StyleSheet.create({
         gap: 20,
     },
     button: {
-        paddingVertical: 10,
-        paddingHorizontal: 20,
+        paddingVertical: 7,
+        paddingHorizontal: 15,
         borderWidth: 2,
         borderColor: '#fa7c10',
         borderRadius: 25,
