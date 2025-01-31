@@ -1,6 +1,6 @@
 // Header.tsx
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Image } from 'react-native';
+import { View, TouchableOpacity, Image, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { t } from 'react-native-tailwindcss';
@@ -31,15 +31,16 @@ const Header = () => {
       ]}
     >
       {/* Company Logo */}
-      <TouchableOpacity onPress={() => router.push('/home')}>
+      <TouchableOpacity onPress={() => router.push('/home')} style={[t.flexRow, t.itemsCenter]}>
         <Image
           source={require('../../assets/images/logo2.png')}
           style={{ width: 40, height: 40, resizeMode: 'contain' }}
         />
+        <Text style={[t.fontBold]}>Global Hrm</Text>
       </TouchableOpacity>
 
       {/* Hamburger Menu Button */}
-      <TouchableOpacity onPress={toggleModal} style={[t.itemsCenter]}>
+      <TouchableOpacity onPress={toggleModal} style={[t.itemsCenter, t.justifyBetween]}>
         <Icon
           name="menu-outline"
           size={28}
