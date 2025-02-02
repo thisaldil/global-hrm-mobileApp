@@ -244,4 +244,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Sidebar;
+export default Sidebar;
