@@ -1,94 +1,157 @@
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Button, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
+import axios from 'axios';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Payslip = () => {
-  const currentYear = new Date().getFullYear();  // Get the current year
-  const [selectedYear, setSelectedYear] = useState(currentYear.toString());
-  const [selectedMonth, setSelectedMonth] = useState('January');
+  const [empId, setEmpId] = useState<string | null>(null);
+  const [payslips, setPayslips] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Generate an array of years from 10 years before to the current year
-  const years = Array.from({ length: 11 }, (_, i) => (currentYear - 10 + i).toString());
+  useEffect(() => {
+    AsyncStorage.getItem("empId").then((value) => {
+      setEmpId(value);
+    });
+  }, []);
 
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-    'September', 'October', 'November', 'December'
-  ];
+  useEffect(() => {
+    if (!empId) return;
 
-  const handleDownload = () => {
-    console.log(`Downloading payslip for ${selectedMonth}, ${selectedYear}`);
-    // Add logic to download the payslip
+    const fetchPayslips = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`https://global-hrm-mobile-server.vercel.app/admin/getPayslip/${empId}`);
+        setPayslips(response.data);
+      } catch (err) {
+        console.error('Error fetching payslips:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPayslips();
+  }, [empId]);
+
+  const getCurrentPayslip = () => {
+    const currentDate = new Date();
+    return payslips.find((payslip) => {
+      const payslipDate = new Date(payslip.date);
+      return (
+        payslipDate.getFullYear() === currentDate.getFullYear() &&
+        payslipDate.getMonth() === currentDate.getMonth()
+      );
+    });
+  };
+
+  const currentPayslip = getCurrentPayslip();
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-CA');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Select Year</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={selectedYear}
-          onValueChange={(itemValue) => setSelectedYear(itemValue)}
-          style={styles.picker}
-        >
-          {years.map((year) => (
-            <Picker.Item key={year} label={year} value={year} />
-          ))}
-        </Picker>
-      </View>
+      <View style={styles.contentContainer}>
+        {loading && <ActivityIndicator size="large" color="#02c3cc" />}
+        {!loading && !currentPayslip && <Text style={styles.noPayslipsText}>No payslip found for the current month</Text>}
 
-      <Text style={styles.label}>Select Month</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={selectedMonth}
-          onValueChange={(itemValue) => setSelectedMonth(itemValue)}
-          style={styles.picker}
-        >
-          {months.map((month) => (
-            <Picker.Item key={month} label={month} value={month} />
-          ))}
-        </Picker>
-      </View>
+        {currentPayslip && (
+          <>
+            <Text style={styles.headerText}>Payslip for {formatDate(currentPayslip.date)}</Text>
+            <Text style={styles.text}>Total days worked: <Text style={styles.bold}>{currentPayslip.total_days_worked}</Text></Text>
+            <Text style={styles.text}>Total hours worked: <Text style={styles.bold}>{currentPayslip.total_hours_worked}</Text></Text>
 
-      <TouchableOpacity style={styles.buttonContainer} onPress={handleDownload}>
-        <Text style={styles.buttonText}>Download Payslip</Text>
-      </TouchableOpacity>
+            <ScrollView style={styles.tableContainer} nestedScrollEnabled={true}>
+              {Object.keys(currentPayslip.earnings).map((key, index) => (
+                <View key={index} style={styles.tableRow}>
+                  <Text style={styles.tableCellLeft}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+                  <Text style={styles.tableCellRight}>{parseFloat(currentPayslip.earnings[key]).toFixed(2)}</Text>
+                </View>
+              ))}
+              {Object.keys(currentPayslip.deductions).map((key, index) => (
+                <View key={index} style={styles.tableRow}>
+                  <Text style={styles.tableCellLeft}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+                  <Text style={styles.tableCellRight}>{parseFloat(currentPayslip.deductions[key]).toFixed(2)}</Text>
+                </View>
+              ))}
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCellLeft}>Total Earnings</Text>
+                <Text style={styles.tableCellRight}>{currentPayslip.total_earnings}</Text>
+              </View>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCellLeft}>Total Deductions</Text>
+                <Text style={styles.tableCellRight}>{currentPayslip.total_deductions}</Text>
+              </View>
+              <View style={styles.tableRow1}>
+                <Text style={styles.tableCellLeft}>Net Pay</Text>
+                <Text style={styles.tableCellRight}>{currentPayslip.net_pay}</Text>
+              </View>
+            </ScrollView>
+          </>
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
     flex: 1,
-    justifyContent: 'center',
+    padding: 10,
   },
-  label: {
+  contentContainer: {
+    marginTop: 20,
+  },
+  headerText: {
     fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 10,
-    color: '#333',
   },
-  pickerContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
+  text: {
+    fontSize: 16,
+  },
+  bold: {
+    fontWeight: 'bold',
+  },
+  table: {
+    marginTop: 20,
     borderWidth: 1,
     borderColor: '#ccc',
-    marginBottom: 20,
-    overflow: 'hidden',
   },
-  picker: {
-    height: 50,
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
   },
-  buttonContainer: {
-    marginTop: 30,
-    backgroundColor: '#FF8C00',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
+  tableRow1: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    backgroundColor: '#f4f4f4',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
   },
-  buttonText: {
-    color: '#fff',
+  tableCellLeft: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: 'bold',
+  },
+  tableCellRight: {
+    flex: 1,
+    textAlign: 'right',
+    fontSize: 16,
+  },
+  noPayslipsText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#888',
+  },
+  tableContainer: {
+    maxHeight: 400,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginTop: 20,
   },
 });
 

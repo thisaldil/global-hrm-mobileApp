@@ -40,12 +40,12 @@ const Payroll = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 30,
+        padding: 20,
         backgroundColor: '#fff',
     },
     buttonContainer: {
         flexDirection: 'row',
-        marginVertical: 40,
+        marginVertical: 20,
         gap: 20,
         marginLeft: 20,
     },
