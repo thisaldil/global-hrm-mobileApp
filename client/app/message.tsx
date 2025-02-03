@@ -22,6 +22,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { AntDesign, FontAwesome } from "@expo/vector-icons"; // Using icons compatible with Expo
 import axios from "axios";
 import ChatMembersModel from "./ChatMembersModal";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Messege = () => {
   const [messages, setMessages] = useState([]);
@@ -34,9 +35,13 @@ const Messege = () => {
   const [chatMembers, setChatMembers] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [isChatMembersModalOpen, setIsChatMembersModalOpen] = useState(false);
+  const [empId, setEmpId] = useState<string | null>(null);
+
+  AsyncStorage.getItem("empId").then((value) => {
+    setEmpId(value);
+  });
 
   useEffect(() => {
-    const empId = "12345"; // Replace with AsyncStorage or another method to fetch logged-in user's empId
     if (empId) {
       fetch(
         `https://global-hrm-mobile-server.vercel.app/employees/getEmployee/${empId}`
