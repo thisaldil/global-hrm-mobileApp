@@ -9,6 +9,7 @@ import {
   Modal,
   StyleSheet,
   Image,
+  Linking,
 } from "react-native";
 import { db } from "../firebase/firebase"; // Assuming you already have the firebase setup
 import { ref, set, push, onValue, remove } from "firebase/database";
@@ -24,17 +25,40 @@ import axios from "axios";
 import ChatMembersModel from "./ChatMembersModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// Interfaces
+interface Message {
+  sender: string;
+  role: string;
+  content: string;
+  fileURL: string | null;
+  fileName: string | null;
+  timestamp: number;
+  messageId?: string;
+}
+
+interface Chat {
+  chatId: string;
+  timestamp: number;
+  participants: string[];
+}
+
+interface ChatMember {
+  empId: string;
+  name: string;
+  role: string;
+}
+
 const Messege = () => {
-  const [messages, setMessages] = useState([]);
-  const [message, setMessage] = useState("");
-  const [file, setFile] = useState(null);
-  const [fileName, setFileName] = useState("");
-  const [selectedUser, setSelectedUser] = useState("");
-  const [role, setRole] = useState("");
-  const [chats, setChats] = useState([]);
-  const [chatMembers, setChatMembers] = useState([]);
-  const [currentChatId, setCurrentChatId] = useState(null);
-  const [isChatMembersModalOpen, setIsChatMembersModalOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [message, setMessage] = useState<string>("");
+  const [file, setFile] = useState<any>(null);
+  const [fileName, setFileName] = useState<string>("");
+  const [selectedUser, setSelectedUser] = useState<string>("");
+  const [role, setRole] = useState<string>("");
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [chatMembers, setChatMembers] = useState<ChatMember[]>([]);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [isChatMembersModalOpen, setIsChatMembersModalOpen] = useState<boolean>(false);
   const [empId, setEmpId] = useState<string | null>(null);
 
   AsyncStorage.getItem("empId").then((value) => {
@@ -61,7 +85,7 @@ const Messege = () => {
     const unsubscribe = onValue(chatsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const loadedChats = Object.entries(data)
+        const loadedChats: Chat[] = Object.entries(data)
           .map(([key, value]) => ({
             chatId: key,
             timestamp: value.timestamp || Date.now(),
@@ -127,7 +151,7 @@ const Messege = () => {
         uploadedFileName = file.name;
       }
 
-      const newMessage = {
+      const newMessage: Message = {
         sender: selectedUser,
         role,
         content: message,
@@ -173,7 +197,7 @@ const Messege = () => {
     setIsChatMembersModalOpen(false);
   };
 
-  const handleCreateChatWithMembers = async (members) => {
+  const handleCreateChatWithMembers = async (members: string[]) => {
     const newChatRef = push(ref(db, "chats/"));
     const newChat = {
       participants: [selectedUser, ...members],
@@ -185,7 +209,7 @@ const Messege = () => {
     setIsChatMembersModalOpen(false);
   };
 
-  const handleDelete = async (chatId) => {
+  const handleDelete = async (chatId: string) => {
     const confirmDelete = Alert.alert(
       "Confirm Deletion",
       "Are you sure you want to delete this chat?",
@@ -248,7 +272,7 @@ const Messege = () => {
       <View style={styles.chatContainer}>
         <FlatList
           data={messages}
-          keyExtractor={(item) => item.messageId}
+          keyExtractor={(item) => item.messageId!}
           renderItem={({ item }) => (
             <View
               style={[
@@ -270,8 +294,8 @@ const Messege = () => {
             onPress={handleFileChange}
             style={styles.filePicker}
           >
-            <FontAwesome name="upload" size={20} color="gray" />
-            <Text>{fileName || "Upload File"}</Text>
+            <FontAwesome name="file" size={24} color="gray" />
+            <Text>{fileName}</Text>
           </TouchableOpacity>
           <TextInput
             style={styles.textInput}
