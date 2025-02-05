@@ -16,34 +16,35 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
   const [empId, setEmpId] = useState<string | null>(null);
   const [showAllComments, setShowAllComments] = useState(false);
 
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get(
+        `https://global-hrm-mobile-server.vercel.app/news/posts/${postId}/comments`
+      );
+      setComments(response.data);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
+
+  const fetchEmpId = async () => {
+    const storedEmpId = await AsyncStorage.getItem("empId");
+    setEmpId(storedEmpId);
+  };
+
+  const fetchUserName = async (empId: string) => {
+    try {
+      const response = await axios.get(
+        `https://global-hrm-mobile-server.vercel.app/employees/getPersonalDetails/${empId}`
+      );
+      setUserName(response.data.name || "Unknown User");
+    } catch (error) {
+      console.error("Error fetching employee name:", error);
+    }
+  };
+
   // Fetch employee data and comments when the component loads
   useEffect(() => {
-    const fetchEmpId = async () => {
-      const storedEmpId = await AsyncStorage.getItem("empId");
-      setEmpId(storedEmpId);
-    };
-
-    const fetchUserName = async (empId: string) => {
-      try {
-        const response = await axios.get(
-          `https://global-hrm-mobile-server.vercel.app/employees/getPersonalDetails/${empId}`
-        );
-        setUserName(response.data.name || "Unknown User");
-      } catch (error) {
-        console.error("Error fetching employee name:", error);
-      }
-    };
-
-    const fetchComments = async () => {
-      try {
-        const response = await axios.get(
-          `https://global-hrm-mobile-server.vercel.app/news/posts/${postId}/comments`
-        );
-        setComments(response.data);
-      } catch (error) {
-        console.error("Error fetching comments:", error);
-      }
-    };
 
     if (empId) fetchUserName(empId);
     fetchComments();
@@ -64,7 +65,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
       });
       setComment(""); // Clear the input field
       setShowAllComments(true); // Always show all comments after posting
-    //   fetchComments(); // Refresh comments
+      fetchComments(); // Refresh comments
     } catch (error) {
       console.error("Error adding comment:", error);
     }
