@@ -22,7 +22,7 @@ import {
 import * as DocumentPicker from "expo-document-picker";
 import { AntDesign, FontAwesome } from "@expo/vector-icons"; // Using icons compatible with Expo
 import axios from "axios";
-import ChatMembersModel from "./ChatMembersModal";
+import ChatMembersModal from "./ChatMembersModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Interfaces
