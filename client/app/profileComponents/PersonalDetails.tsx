@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  Alert,
+  ScrollView,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Picker } from "@react-native-picker/picker";
@@ -66,12 +74,15 @@ const PersonalDetails = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.form}>
         {Object.entries(details).map(([key, value]) =>
           key !== "gender" &&
           key !== "marital_status" &&
-          key !== "date_of_birth" ? (
+          key !== "date_of_birth" &&
+          key !== "empId" && // Exclude empId from being rendered
+          key !== "id" &&
+          key !== "profilepic" ? ( // Exclude id from being rendered
             <View style={styles.inputGroup} key={key}>
               <Text style={styles.label}>
                 {key.replace("_", " ").toUpperCase()}
@@ -81,6 +92,11 @@ const PersonalDetails = () => {
                 value={value}
                 onChangeText={(text) => handleChange(key, text)}
                 placeholder={`Enter ${key.replace("_", " ")}`}
+                keyboardType={
+                  key === "phone" || key === "emergency_contact"
+                    ? "phone-pad"
+                    : "default"
+                }
               />
             </View>
           ) : null
@@ -115,7 +131,10 @@ const PersonalDetails = () => {
         <Button
           title={details.date_of_birth || "Select Date"}
           onPress={() => setDatePickerVisible(true)}
+          color="#FF7F32" // Use your primary theme color
+          style={styles.dateButton}
         />
+
         <DatePickerModal
           locale="en"
           mode="single"
@@ -131,17 +150,22 @@ const PersonalDetails = () => {
         />
 
         {isChanged && (
-          <Button title="Save" onPress={handleSave} color="#FF7F32" />
+          <Button
+            title="Save"
+            onPress={handleSave}
+            color="#FF7F32"
+            style={styles.saveButton}
+          />
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#eaeaea",
+    flexGrow: 1,
+    backgroundColor: "#f5f5f5",
     padding: 20,
   },
   form: {
@@ -151,16 +175,39 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   label: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 5,
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 8,
   },
   input: {
-    height: 40,
+    height: 45,
     borderColor: "#ccc",
     borderWidth: 1,
-    borderRadius: 5,
-    paddingLeft: 10,
+    borderRadius: 8,
+    paddingLeft: 15,
+    fontSize: 16,
+    backgroundColor: "#fff",
+    marginBottom: 10,
+  },
+
+  dateButton: {
+    backgroundColor: "#FF7F32", // Background color
+    paddingVertical: 12, // Padding top and bottom
+    paddingHorizontal: 20, // Padding left and right
+    borderRadius: 8, // Rounded corners
+    fontSize: 16, // Font size for the title
+    color: "#fff", // Text color (white)
+    textAlign: "center", // Center the text horizontally
+    fontWeight: "bold", // Make the text bold
+    marginBottom: 15, // Space below the button
+    width: "100%", // Full width
+  },
+
+  saveButton: {
+    marginTop: 20,
+    backgroundColor: "#FF7F32",
+    color: "#fff",
+    borderRadius: 8,
   },
 });
 

@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   FlatList,
   Alert,
-  Modal,
   StyleSheet,
 } from "react-native";
 import axios from "axios";
@@ -16,9 +14,6 @@ const Resume = () => {
   const [empId, setEmpId] = useState(null);
   const [experienceList, setExperienceList] = useState([]);
   const [educationList, setEducationList] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [isExperience, setIsExperience] = useState(true);
-  const [currentItem, setCurrentItem] = useState(null);
 
   useEffect(() => {
     const fetchEmpId = async () => {
@@ -82,17 +77,10 @@ const Resume = () => {
         data={experienceList}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => {
-              setIsExperience(true);
-              setCurrentItem(item);
-              setModalVisible(true);
-            }}
-            style={styles.card}
-          >
+          <View style={styles.card}>
             <Text style={styles.cardTitle}>{item.company}</Text>
-            <Text>{item.role}</Text>
-            <Text>
+            <Text style={styles.cardSubtitle}>{item.role}</Text>
+            <Text style={styles.cardDate}>
               {item.date_from} to {item.date_to || "Current"}
             </Text>
             <TouchableOpacity
@@ -101,7 +89,7 @@ const Resume = () => {
             >
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
-          </TouchableOpacity>
+          </View>
         )}
       />
 
@@ -110,17 +98,10 @@ const Resume = () => {
         data={educationList}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => {
-              setIsExperience(false);
-              setCurrentItem(item);
-              setModalVisible(true);
-            }}
-            style={styles.card}
-          >
+          <View style={styles.card}>
             <Text style={styles.cardTitle}>{item.institution}</Text>
-            <Text>{item.degree}</Text>
-            <Text>
+            <Text style={styles.cardSubtitle}>{item.degree}</Text>
+            <Text style={styles.cardDate}>
               {item.date_from} to {item.date_to || "Current"}
             </Text>
             <TouchableOpacity
@@ -129,7 +110,7 @@ const Resume = () => {
             >
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
-          </TouchableOpacity>
+          </View>
         )}
       />
     </View>
@@ -137,23 +118,55 @@ const Resume = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#F8F9FA" },
-  header: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
-  card: {
-    backgroundColor: "white",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#F8F9FA",
   },
-  cardTitle: { fontSize: 16, fontWeight: "bold" },
+  header: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#333",
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#444",
+  },
+  cardSubtitle: {
+    fontSize: 16,
+    color: "#666",
+    marginTop: 4,
+  },
+  cardDate: {
+    fontSize: 14,
+    color: "#888",
+    marginTop: 2,
+  },
   deleteButton: {
-    marginTop: 5,
-    backgroundColor: "red",
-    padding: 5,
-    borderRadius: 5,
+    marginTop: 8,
+    backgroundColor: "#FF4C4C",
+    paddingVertical: 8,
+    borderRadius: 6,
     alignItems: "center",
   },
-  deleteText: { color: "white" },
+  deleteText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
 });
 
 export default Resume;
