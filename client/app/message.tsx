@@ -21,7 +21,7 @@ import {
 import * as DocumentPicker from "expo-document-picker";
 import { AntDesign, FontAwesome } from "@expo/vector-icons"; // Using icons compatible with Expo
 import axios from "axios";
-import ChatMembersModel from "./ChatMembersModal";
+import ChatMembersModal from "./ChatMembersModal";
 
 const Messege = () => {
   const [messages, setMessages] = useState([]);
@@ -103,6 +103,32 @@ const Messege = () => {
       setMessages([]);
     }
   }, [currentChatId]);
+
+  useEffect(() => {
+    if (!selectedUser) return; // Ensure user is set before fetching chats
+
+    const chatsRef = ref(db, "chats/");
+    const unsubscribe = onValue(chatsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const loadedChats = Object.entries(data)
+          .map(([key, value]) => ({
+            chatId: key,
+            timestamp: value.timestamp || Date.now(),
+            participants: value.members || [],
+          }))
+          .filter((chat) => chat.participants.includes(selectedUser)) // Ensure selectedUser is set
+          .sort((a, b) => b.timestamp - a.timestamp);
+
+        setChats(loadedChats);
+        if (loadedChats.length > 0 && !currentChatId) {
+          setCurrentChatId(loadedChats[0].chatId);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [selectedUser]); // Depend only on selectedUser
 
   const handleSendMessage = async () => {
     if (message.trim() || file) {
@@ -286,9 +312,11 @@ const Messege = () => {
       {isChatMembersModalOpen && (
         <Modal
           visible={isChatMembersModalOpen}
+          animationType="slide"
+          transparent={false}
           onRequestClose={handleModalClose}
         >
-          {/* Insert your modal content */}
+          <ChatMembersModal onClose={handleModalClose} />
         </Modal>
       )}
     </View>
