@@ -68,7 +68,7 @@ const Actions = () => {
             {leaveRequestList.map((leave) => (
               <View key={leave.id} style={[t.flexRow, t.itemsCenter]}>
                 <Ionicons name="calendar-outline" size={20} color="red" />
-                <Text style={[t.textBase, t.textGray700]}>Leave Request - {leave.leave_type}</Text>
+                <Text style={[t.textBase, t.textGray700, t.mL2]}>Leave Request - {leave.leave_type}</Text>
               </View>
             ))}
           </View>
