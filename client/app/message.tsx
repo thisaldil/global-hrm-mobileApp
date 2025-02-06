@@ -10,7 +10,8 @@ import {
   Image,
   Alert,
 } from "react-native";
-
+import { BlurView } from "expo-blur";
+import { TouchableWithoutFeedback } from "react-native";
 import { Feather, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { db } from "../firebase/firebase";
@@ -38,6 +39,7 @@ const Message = () => {
   const [fileName, setFileName] = useState("");
   const [chatMembers, setChatMembers] = useState([]);
   const [isChatMembersModalOpen, setIsChatMembersModalOpen] = useState(false);
+  const [isDropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     const getEmployeeData = async () => {
@@ -283,18 +285,33 @@ const Message = () => {
 
       {/* Main Chat Area */}
       <View style={styles.mainContent}>
+        {/* Apply Blur Effect and Disable Interaction when Sidebar is Expanded */}
+        {isSidebarExpanded && (
+          <TouchableWithoutFeedback onPress={toggleSidebar}>
+            <BlurView intensity={15} style={styles.blurOverlay} tint="dark" />
+          </TouchableWithoutFeedback>
+        )}
         <ScrollView style={styles.messagesContainer}>
           <View style={styles.chatMembersDropdown}>
-            <Text style={styles.dropdownLabel}>Chat Members</Text>
-            <ScrollView>
-              {[...new Set(chatMembers)]
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map(({ empId, name }) => (
-                  <Text key={empId} style={styles.dropdownItem}>
-                    {name} ({empId})
-                  </Text>
-                ))}
-            </ScrollView>
+            {/* Dropdown Toggle */}
+            <TouchableOpacity onPress={() => setDropdownOpen(!isDropdownOpen)}>
+              <Text style={styles.dropdownLabel}>
+                Members {isDropdownOpen ? "▲" : "▼"}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Dropdown Content */}
+            {isDropdownOpen && (
+              <ScrollView>
+                {[...new Set(chatMembers)]
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(({ empId, name }) => (
+                    <Text key={empId} style={styles.dropdownItem}>
+                      {name} ({empId})
+                    </Text>
+                  ))}
+              </ScrollView>
+            )}
           </View>
           {messages.map((msg, index) => (
             <View
@@ -345,10 +362,8 @@ const Message = () => {
             onPress={handleFileChange}
           >
             <Feather name="upload" size={24} color="black" />
-            <Text style={styles.fileUploadText}>
-              {fileName || "Upload File"}
-            </Text>
           </TouchableOpacity>
+
           <TextInput
             style={styles.textInput}
             placeholder="Type your message..."
@@ -380,11 +395,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   sidebar: {
-    backgroundColor: "#2c3e50",
+    backgroundColor: "linear-gradient(180deg, #FF8008, #FFC837)",
     padding: 2,
     justifyContent: "flex-start",
     width: 180,
+    zIndex: 2, // Ensure sidebar stays above the blur
   },
+  blurOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1, // Ensures blur is above everything except sidebar
+  },
+
   toggleButton: {
     alignSelf: "flex-start",
     padding: 20,
@@ -423,7 +444,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   selectedChatItem: {
-    backgroundColor: "#1abc9c",
+    backgroundColor: "#02c3cc",
   },
   chatItemText: {
     color: "white",
@@ -526,13 +547,13 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   sendButton: {
-    backgroundColor: "#3498db",
-    padding: 10,
+    backgroundColor: "#02c3cc",
+    padding: 6,
     borderRadius: 5,
   },
   sendButtonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 8,
   },
 });
 export default Message;
