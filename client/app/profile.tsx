@@ -25,7 +25,7 @@ const Profile = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [workDetails, setWorkDetails] = useState({});
   const [personalDetails, setPersonalDetails] = useState({});
-  const [empId, setEmpId] = useState(null);
+  const [empId, setEmpId] = useState<string | null>(null);
   const API_BASE_URL = "https://global-hrm-mobile-server.vercel.app";
 
   useEffect(() => {
