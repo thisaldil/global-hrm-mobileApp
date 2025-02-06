@@ -10,7 +10,8 @@ import {
   Image,
   Alert,
 } from "react-native";
-
+import { BlurView } from "expo-blur";
+import { TouchableWithoutFeedback } from "react-native";
 import { Feather, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { db } from "../firebase/firebase";
@@ -23,8 +24,9 @@ import {
 } from "firebase/storage";
 import ChatMembersModal from "./ChatMembersModal";
 import axios from "axios";
-
+import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Linking } from "react-native";
 
 const Message = () => {
   const [messages, setMessages] = useState([]);
@@ -39,6 +41,11 @@ const Message = () => {
   const [fileName, setFileName] = useState("");
   const [chatMembers, setChatMembers] = useState([]);
   const [isChatMembersModalOpen, setIsChatMembersModalOpen] = useState(false);
+  const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const [isMainChatVisible, setIsMainChatVisible] = useState(true);
+  const [longPressedChatId, setLongPressedChatId] = useState(null); // Track the long-pressed chat
+  const [isFileSelected, setIsFileSelected] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const getEmployeeData = async () => {
@@ -115,21 +122,40 @@ const Message = () => {
     }
   }, [currentChatId]);
 
+  const handleNewChat = () => {
+    setIsMainChatVisible(false); // Hide the main chat area
+    setIsChatMembersModalOpen(true); // Show the chat members modal
+  };
+
+  const handleLongPress = (chatId) => {
+    setLongPressedChatId(chatId); // Set the chatId of the long-pressed chat
+  };
+
   const handleSendMessage = async () => {
     if (message.trim() || file) {
       if (file && file.size > 5 * 1024 * 1024) {
+        Alert.alert("File too large", "Please select a file smaller than 5MB.");
         return;
       }
+
+      setIsUploading(true); // Start loading state
 
       const storage = getStorage();
       let uploadedFileURL = null;
       let uploadedFileName = null;
 
       if (file) {
-        const fileRef = storageRef(storage, `uploads/${file.name}`);
-        const uploadResult = await uploadBytes(fileRef, file);
-        uploadedFileURL = await getDownloadURL(uploadResult.ref);
-        uploadedFileName = file.name;
+        try {
+          const fileRef = storageRef(storage, `uploads/${fileName}`);
+          const uploadResult = await uploadBytes(fileRef, file); // Upload Blob
+          uploadedFileURL = await getDownloadURL(uploadResult.ref);
+          uploadedFileName = fileName;
+        } catch (error) {
+          console.error("Error uploading file:", error);
+          Alert.alert("Upload Failed", "Error uploading file.");
+          setIsUploading(false);
+          return;
+        }
       }
 
       const newMessage = {
@@ -145,15 +171,22 @@ const Message = () => {
         const messagesRef = ref(db, `chats/${currentChatId}/messages/`);
         const newMessageRef = push(messagesRef);
         await set(newMessageRef, newMessage);
+
         setMessages([
           ...messages,
           { ...newMessage, messageId: newMessageRef.key },
         ]);
+
+        // Reset input states
         setMessage("");
         setFile(null);
         setFileName("");
+        setIsFileSelected(false);
       } catch (e) {
         console.error("Error sending message:", e);
+        Alert.alert("Error", "Failed to send message.");
+      } finally {
+        setIsUploading(false); // Stop loading state
       }
     }
   };
@@ -161,23 +194,38 @@ const Message = () => {
   const handleFileChange = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
+      allowsEditing: false,
       aspect: [4, 3],
       quality: 1,
     });
 
-    if (!result.cancelled) {
-      setFile(result);
-      setFileName(result.uri.split("/").pop());
-    }
-  };
+    if (!result.canceled && result.assets.length > 0) {
+      const selectedFile = result.assets[0];
+      const uri = selectedFile.uri;
 
-  const handleNewChat = () => {
-    setIsChatMembersModalOpen(true);
+      try {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+
+        setFile(blob);
+        setFileName(selectedFile.fileName || uri.split("/").pop()); // Extract filename
+        setIsFileSelected(true); // Indicate a file has been selected
+      } catch (error) {
+        console.error("Error converting file to Blob:", error);
+        Alert.alert("File Error", "Failed to process the selected file.");
+      }
+    }
   };
 
   const handleModalClose = () => {
     setIsChatMembersModalOpen(false);
+    setIsMainChatVisible(true);
+  };
+
+  const openFile = (fileUri) => {
+    Linking.openURL(fileUri).catch((err) =>
+      console.error("Failed to open file:", err)
+    );
   };
 
   const handleCreateChatWithMembers = async (members) => {
@@ -223,8 +271,8 @@ const Message = () => {
 
   const toggleSidebar = () => {
     Animated.timing(sidebarWidth, {
-      toValue: isSidebarExpanded ? 70 : 250,
-      duration: 300,
+      toValue: isSidebarExpanded ? 70 : 180,
+      duration: 100,
       useNativeDriver: false,
     }).start();
     setIsSidebarExpanded(!isSidebarExpanded);
@@ -234,137 +282,173 @@ const Message = () => {
     <View style={styles.container}>
       {/* Sidebar */}
       <Animated.View style={[styles.sidebar, { width: sidebarWidth }]}>
-        <TouchableOpacity style={styles.toggleButton} onPress={toggleSidebar}>
-          <Feather
-            name={isSidebarExpanded ? "chevron-left" : "menu"}
-            size={24}
-            color="white"
-          />
-        </TouchableOpacity>
-
-        {isSidebarExpanded && (
-          <View style={styles.container}>
-            <View style={styles.sidebar}>
-              <Text style={styles.sidebarTitle}>Chat</Text>
-              <TouchableOpacity
-                style={[
-                  styles.newChatButton,
-                  role === "Employee" && styles.disabledButton,
-                ]}
-                onPress={handleNewChat}
-                disabled={role === "Employee"}
-              >
-                <Text style={styles.newChatButtonText}>New Chat</Text>
-              </TouchableOpacity>
-              <ScrollView style={styles.chatList}>
-                {chats.map((chat) => (
-                  <TouchableOpacity
-                    key={chat.chatId}
-                    style={[
-                      styles.chatItem,
-                      currentChatId === chat.chatId && styles.selectedChatItem,
-                    ]}
-                    onPress={() => setCurrentChatId(chat.chatId)}
-                  >
-                    <Text style={styles.chatItemText}>{chat.chatId}</Text>
-                    {role !== "Employee" && (
-                      <TouchableOpacity
-                        onPress={() => handleDelete(chat.chatId)}
-                      >
-                        <Feather name="trash" size={20} color="#FF6347" />
-                      </TouchableOpacity>
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+        <LinearGradient
+          colors={["#FF8008", "#FFC837"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.sidebarGradient}
+        >
+          {" "}
+          <TouchableOpacity style={styles.toggleButton} onPress={toggleSidebar}>
+            <Feather
+              name={isSidebarExpanded ? "chevron-left" : "menu"}
+              size={22}
+              color="white"
+            />
+          </TouchableOpacity>
+          {isSidebarExpanded && (
+            <View style={styles.container}>
+              <View style={styles.sidebar}>
+                <Text style={styles.sidebarTitle}>Chats</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.newChatButton,
+                    role === "Employee" && styles.disabledButton,
+                  ]}
+                  onPress={handleNewChat}
+                  disabled={role === "Employee"}
+                >
+                  <Text style={styles.newChatButtonText}>New Chat</Text>
+                </TouchableOpacity>
+                <ScrollView style={styles.chatList}>
+                  {chats.map((chat) => (
+                    <TouchableOpacity
+                      key={chat.chatId}
+                      style={[
+                        styles.chatItem,
+                        currentChatId === chat.chatId &&
+                          styles.selectedChatItem,
+                      ]}
+                      onPress={() => setCurrentChatId(chat.chatId)}
+                      onLongPress={() => handleLongPress(chat.chatId)} // Trigger on long press
+                    >
+                      <Text style={styles.chatItemText}>{chat.chatId}</Text>
+                      {longPressedChatId === chat.chatId && ( // Show delete button only for long-pressed chat
+                        <TouchableOpacity
+                          onPress={() => handleDelete(chat.chatId)}
+                        >
+                          <Feather name="trash" size={20} color="#FF6347" />
+                        </TouchableOpacity>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
             </View>
-          </View>
-        )}
+          )}
+        </LinearGradient>
       </Animated.View>
 
       {/* Main Chat Area */}
-      <View style={styles.mainContent}>
-        <ScrollView style={styles.messagesContainer}>
-          <View style={styles.chatMembersDropdown}>
-            <Text style={styles.dropdownLabel}>Chat Members</Text>
-            <ScrollView>
-              {[...new Set(chatMembers)]
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map(({ empId, name }) => (
-                  <Text key={empId} style={styles.dropdownItem}>
-                    {name} ({empId})
-                  </Text>
-                ))}
-            </ScrollView>
-          </View>
-          {messages.map((msg, index) => (
-            <View
-              key={index}
-              style={[
-                styles.messageContainer,
-                msg.sender === selectedUser
-                  ? styles.messageContainerRight
-                  : styles.messageContainerLeft,
-              ]}
-            >
-              <View style={styles.messageHeader}>
-                {msg.sender === selectedUser ? (
-                  <Image
-                    source={require("../assets/images/avatar.png")}
-                    style={styles.profileImage}
-                  />
-                ) : (
-                  <FontAwesome name="user-circle" size={24} color="#ccc" />
-                )}
-                <Text style={styles.messageRole}>{msg.role}</Text>
-                <Text style={styles.messageTime}>
-                  {new Date(msg.timestamp).toLocaleTimeString()}
-                </Text>
-              </View>
-              <View style={styles.messageContent}>
-                <Text style={styles.messageText}>{msg.content}</Text>
-                {msg.fileURL && (
-                  <TouchableOpacity
-                    style={styles.fileLink}
-                    onPress={() => Linking.openURL(msg.fileURL)}
-                  >
-                    <MaterialIcons
-                      name="insert-drive-file"
-                      size={20}
-                      color="#007AFF"
-                    />
-                    <Text style={styles.fileLinkText}>{msg.fileName}</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+      {isMainChatVisible && (
+        <View style={styles.mainContent}>
+          {/* Apply Blur Effect and Disable Interaction when Sidebar is Expanded */}
+          {isSidebarExpanded && (
+            <TouchableWithoutFeedback onPress={toggleSidebar}>
+              <BlurView intensity={15} style={styles.blurOverlay} tint="dark" />
+            </TouchableWithoutFeedback>
+          )}
+          {/* Display the chatId when a chat is selected */}
+          {currentChatId && (
+            <View style={styles.chatIdContainer}>
+              <Text style={styles.chatIdText}> {currentChatId}</Text>
             </View>
-          ))}
-        </ScrollView>
-        <View style={styles.inputContainer}>
-          <TouchableOpacity
-            style={styles.fileUploadButton}
-            onPress={handleFileChange}
-          >
-            <Feather name="upload" size={24} color="black" />
-            <Text style={styles.fileUploadText}>
-              {fileName || "Upload File"}
-            </Text>
-          </TouchableOpacity>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Type your message..."
-            value={message}
-            onChangeText={setMessage}
-          />
-          <TouchableOpacity
-            style={styles.sendButton}
-            onPress={handleSendMessage}
-          >
-            <Feather name="send" size={24} color="white" />
-            <Text style={styles.sendButtonText}></Text>
-          </TouchableOpacity>
+          )}
+          <ScrollView style={styles.messagesContainer}>
+            <View style={styles.chatMembersDropdown}>
+              {/* Dropdown Toggle */}
+              <TouchableOpacity
+                onPress={() => setDropdownOpen(!isDropdownOpen)}
+              >
+                <Text style={styles.dropdownLabel}>
+                  Members {isDropdownOpen ? "▲" : "▼"}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Dropdown Content */}
+              {isDropdownOpen && (
+                <ScrollView>
+                  {[...new Set(chatMembers)]
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(({ empId, name }) => (
+                      <Text key={empId} style={styles.dropdownItem}>
+                        {name} ({empId})
+                      </Text>
+                    ))}
+                </ScrollView>
+              )}
+            </View>
+            {messages.map((msg, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.messageContainer,
+                  msg.sender === selectedUser
+                    ? styles.messageContainerRight
+                    : styles.messageContainerLeft,
+                ]}
+              >
+                <View style={styles.messageHeader}>
+                  {msg.sender === selectedUser ? (
+                    <Image
+                      source={require("../assets/images/avatar.png")}
+                      style={styles.profileImage}
+                    />
+                  ) : (
+                    <FontAwesome name="user-circle" size={24} color="#ccc" />
+                  )}
+                  <Text style={styles.messageRole}>{msg.role}</Text>
+                  <Text style={styles.messageTime}>
+                    {new Date(msg.timestamp).toLocaleTimeString()}
+                  </Text>
+                </View>
+                <View style={styles.messageContent}>
+                  <Text style={styles.messageText}>{msg.content}</Text>
+                  {msg.fileURL && (
+                    <TouchableOpacity
+                      style={styles.fileLink}
+                      onPress={() => Linking.openURL(msg.fileURL)}
+                    >
+                      <MaterialIcons
+                        name="insert-drive-file"
+                        size={20}
+                        color="#007AFF"
+                      />
+                      <Text style={styles.fileLinkText}>{msg.fileName}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+          <View style={styles.inputContainer}>
+            <TouchableOpacity
+              style={styles.fileUploadButton}
+              onPress={handleFileChange}
+            >
+              {isFileSelected ? (
+                <Feather name="check-circle" size={24} color="green" />
+              ) : (
+                <Feather name="upload" size={24} color="black" />
+              )}
+            </TouchableOpacity>
+
+            <TextInput
+              style={styles.textInput}
+              placeholder="Type your message..."
+              value={message}
+              onChangeText={setMessage}
+            />
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={handleSendMessage}
+            >
+              <Feather name="send" size={24} color="white" />
+              <Text style={styles.sendButtonText}></Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      )}
       {isChatMembersModalOpen && (
         <ChatMembersModal
           onClose={handleModalClose}
@@ -381,11 +465,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   sidebar: {
-    backgroundColor: "#2c3e50",
     padding: 2,
-    justifyContent: "flex-start",
-    width: 180,
+    justifyContent: "center",
+    width: 150,
+    zIndex: 2, // Ensure sidebar stays above the blur
   },
+  sidebarGradient: {
+    flex: 1, // Ensure it fills the entire sidebar
+    padding: 6, // Add padding inside the gradient
+    justifyContent: "flex-start",
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+  },
+  blurOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1, // Ensures blur is above everything except sidebar
+  },
+
   toggleButton: {
     alignSelf: "flex-start",
     padding: 20,
@@ -418,13 +514,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 10,
+    padding: 6,
     backgroundColor: "#34495e",
     borderRadius: 5,
     marginBottom: 5,
   },
   selectedChatItem: {
-    backgroundColor: "#1abc9c",
+    backgroundColor: "#02c3cc",
   },
   chatItemText: {
     color: "white",
@@ -432,7 +528,7 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flex: 1,
-    padding: 10,
+    padding: 6,
     backgroundColor: "white",
   },
   messagesContainer: {
@@ -527,13 +623,25 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   sendButton: {
-    backgroundColor: "#3498db",
-    padding: 10,
+    backgroundColor: "#02c3cc",
+    padding: 6,
     borderRadius: 5,
   },
   sendButtonText: {
     color: "white",
+    fontSize: 6,
+  },
+  chatIdContainer: {
+    padding: 10,
+    backgroundColor: "#f1f1f1",
+    borderRadius: 5,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  chatIdText: {
     fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
   },
 });
 export default Message;
