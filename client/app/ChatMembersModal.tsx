@@ -9,26 +9,37 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { getDatabase, ref, update } from "firebase/database";
-import { initializeApp } from "firebase/app";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
-import { firebaseConfig } from "../firebase/firebase";
 import axios from "axios";
 import { AntDesign } from "@expo/vector-icons";
+import { getDatabase, ref, update } from "firebase/database";
+import { initializeApp } from "firebase/app";
+import { firebaseConfig } from "../firebase/firebase";
 
-// Initialize Firebase app
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-const ChatMembersModel = ({ onClose }) => {
+const ChatMembersModal = ({ onClose }) => {
   const [employeeList, setEmployeeList] = useState([]);
   const [filteredEmployeeList, setFilteredEmployeeList] = useState([]);
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [designationFilter, setDesignationFilter] = useState("");
   const [chatName, setChatName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
-  const empId = "123"; // Replace with actual stored employee ID
+  const [empId, setEmpId] = useState("");
 
+  // Fetch empId from AsyncStorage
+  useEffect(() => {
+    const fetchEmpId = async () => {
+      const storedEmpId = await AsyncStorage.getItem("empId");
+      setEmpId(storedEmpId || "");
+    };
+    fetchEmpId();
+  }, []);
+
+  // Fetch employee data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -44,6 +55,7 @@ const ChatMembersModel = ({ onClose }) => {
     fetchData();
   }, []);
 
+  // Filter employee list when department or designation changes
   useEffect(() => {
     const filteredList = employeeList.filter((employee) => {
       const matchesDepartment = departmentFilter
@@ -57,6 +69,7 @@ const ChatMembersModel = ({ onClose }) => {
     setFilteredEmployeeList(filteredList);
   }, [departmentFilter, designationFilter, employeeList]);
 
+  // Toggle member selection
   const handleToggleMember = (employeeId) => {
     setSelectedMembers((prev) =>
       prev.includes(employeeId)
@@ -65,6 +78,7 @@ const ChatMembersModel = ({ onClose }) => {
     );
   };
 
+  // Save chat group
   const handleSave = async () => {
     if (!chatName) {
       Alert.alert("Error", "Please enter a chat name.");
@@ -193,4 +207,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChatMembersModel;
+export default ChatMembersModal;

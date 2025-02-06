@@ -22,7 +22,6 @@ const Stack = createStackNavigator<RootStackParamList>();
 const App: React.FC = () => {
   return (
     <NavigationContainer>
-
       <Stack.Navigator initialRouteName="index">
         {/* Splash Screen */}
         <Stack.Screen

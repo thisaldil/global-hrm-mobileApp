@@ -3,14 +3,17 @@ import {
   View,
   Text,
   TextInput,
-  FlatList,
   TouchableOpacity,
-  Alert,
-  Modal,
+  ScrollView,
   StyleSheet,
+  Animated,
   Image,
+  Alert,
 } from "react-native";
-import { db } from "../firebase/firebase"; // Assuming you already have the firebase setup
+
+import { Feather, MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import { db } from "../firebase/firebase";
 import { ref, set, push, onValue, remove } from "firebase/database";
 import {
   getStorage,
@@ -18,37 +21,43 @@ import {
   uploadBytes,
   getDownloadURL,
 } from "firebase/storage";
-import * as DocumentPicker from "expo-document-picker";
-import { AntDesign, FontAwesome } from "@expo/vector-icons"; // Using icons compatible with Expo
+import ChatMembersModal from "./ChatMembersModal";
 import axios from "axios";
-import ChatMembersModel from "./ChatMembersModal";
 
-const Messege = () => {
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const Message = () => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
-  const [file, setFile] = useState(null);
-  const [fileName, setFileName] = useState("");
+  const [chats, setChats] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState(null);
   const [selectedUser, setSelectedUser] = useState("");
   const [role, setRole] = useState("");
-  const [chats, setChats] = useState([]);
+  const [sidebarWidth] = useState(new Animated.Value(70)); // Initial width for sidebar
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState("");
   const [chatMembers, setChatMembers] = useState([]);
-  const [currentChatId, setCurrentChatId] = useState(null);
   const [isChatMembersModalOpen, setIsChatMembersModalOpen] = useState(false);
 
   useEffect(() => {
-    const empId = "12345"; // Replace with AsyncStorage or another method to fetch logged-in user's empId
-    if (empId) {
-      fetch(
-        `https://global-hrm-mobile-server.vercel.app/employees/getEmployee/${empId}`
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.empId && data.role) {
-            setSelectedUser(data.empId);
-            setRole(data.role);
-          }
-        });
-    }
+    const getEmployeeData = async () => {
+      const empId = await AsyncStorage.getItem("empId");
+      if (empId) {
+        fetch(
+          `https://global-hrm-mobile-server.vercel.app/employees/getEmployee/${empId}`
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.empId && data.role) {
+              setSelectedUser(data.empId);
+              setRole(data.role);
+            }
+          });
+      }
+    };
+
+    getEmployeeData();
   }, []);
 
   useEffect(() => {
@@ -62,7 +71,9 @@ const Messege = () => {
             timestamp: value.timestamp || Date.now(),
             participants: value.members || [],
           }))
-          .filter((chat) => chat.participants.includes(selectedUser))
+          .filter((chat) => {
+            return chat.participants.includes(selectedUser);
+          })
           .sort((a, b) => b.timestamp - a.timestamp);
         setChats(loadedChats);
         if (loadedChats.length > 0 && !currentChatId) {
@@ -107,7 +118,6 @@ const Messege = () => {
   const handleSendMessage = async () => {
     if (message.trim() || file) {
       if (file && file.size > 5 * 1024 * 1024) {
-        Alert.alert("Error", "File size exceeds the limit of 5MB.");
         return;
       }
 
@@ -149,14 +159,16 @@ const Messege = () => {
   };
 
   const handleFileChange = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
-      if (result.type === "success") {
-        setFile(result);
-        setFileName(result.name);
-      }
-    } catch (e) {
-      console.error("Error picking file:", e);
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setFile(result);
+      setFileName(result.uri.split("/").pop());
     }
   };
 
@@ -181,11 +193,14 @@ const Messege = () => {
   };
 
   const handleDelete = async (chatId) => {
-    const confirmDelete = Alert.alert(
-      "Confirm Deletion",
+    Alert.alert(
+      "Delete Chat",
       "Are you sure you want to delete this chat?",
       [
-        { text: "Cancel" },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
         {
           text: "Delete",
           onPress: async () => {
@@ -197,76 +212,143 @@ const Messege = () => {
               );
             } catch (error) {
               console.error("Error deleting chat: ", error);
+              Alert.alert("Error", "Error deleting chat");
             }
           },
         },
-      ]
+      ],
+      { cancelable: false }
     );
+  };
+
+  const toggleSidebar = () => {
+    Animated.timing(sidebarWidth, {
+      toValue: isSidebarExpanded ? 70 : 250,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+    setIsSidebarExpanded(!isSidebarExpanded);
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.sidebar}>
-        <Text style={styles.heading}>Team Group Chat</Text>
-        <TouchableOpacity
-          onPress={handleNewChat}
-          disabled={role === "Employee"}
-          style={[
-            styles.newChatButton,
-            role === "Employee" && styles.disabledButton,
-          ]}
-        >
-          <Text style={styles.buttonText}>New Chat</Text>
+      {/* Sidebar */}
+      <Animated.View style={[styles.sidebar, { width: sidebarWidth }]}>
+        <TouchableOpacity style={styles.toggleButton} onPress={toggleSidebar}>
+          <Feather
+            name={isSidebarExpanded ? "chevron-left" : "menu"}
+            size={24}
+            color="white"
+          />
         </TouchableOpacity>
-        <FlatList
-          data={chats}
-          keyExtractor={(item) => item.chatId}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.chatItem,
-                currentChatId === item.chatId && styles.selectedChat,
-              ]}
-              onPress={() => setCurrentChatId(item.chatId)}
-            >
-              <Text>{item.chatId}</Text>
-              {role !== "Employee" && (
-                <TouchableOpacity onPress={() => handleDelete(item.chatId)}>
-                  <AntDesign name="delete" size={20} color="red" />
-                </TouchableOpacity>
-              )}
-            </TouchableOpacity>
-          )}
-        />
-      </View>
 
-      <View style={styles.chatContainer}>
-        <FlatList
-          data={messages}
-          keyExtractor={(item) => item.messageId}
-          renderItem={({ item }) => (
+        {isSidebarExpanded && (
+          <View style={styles.container}>
+            <View style={styles.sidebar}>
+              <Text style={styles.sidebarTitle}>Chat</Text>
+              <TouchableOpacity
+                style={[
+                  styles.newChatButton,
+                  role === "Employee" && styles.disabledButton,
+                ]}
+                onPress={handleNewChat}
+                disabled={role === "Employee"}
+              >
+                <Text style={styles.newChatButtonText}>New Chat</Text>
+              </TouchableOpacity>
+              <ScrollView style={styles.chatList}>
+                {chats.map((chat) => (
+                  <TouchableOpacity
+                    key={chat.chatId}
+                    style={[
+                      styles.chatItem,
+                      currentChatId === chat.chatId && styles.selectedChatItem,
+                    ]}
+                    onPress={() => setCurrentChatId(chat.chatId)}
+                  >
+                    <Text style={styles.chatItemText}>{chat.chatId}</Text>
+                    {role !== "Employee" && (
+                      <TouchableOpacity
+                        onPress={() => handleDelete(chat.chatId)}
+                      >
+                        <Feather name="trash" size={20} color="#FF6347" />
+                      </TouchableOpacity>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        )}
+      </Animated.View>
+
+      {/* Main Chat Area */}
+      <View style={styles.mainContent}>
+        <ScrollView style={styles.messagesContainer}>
+          <View style={styles.chatMembersDropdown}>
+            <Text style={styles.dropdownLabel}>Chat Members</Text>
+            <ScrollView>
+              {[...new Set(chatMembers)]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(({ empId, name }) => (
+                  <Text key={empId} style={styles.dropdownItem}>
+                    {name} ({empId})
+                  </Text>
+                ))}
+            </ScrollView>
+          </View>
+          {messages.map((msg, index) => (
             <View
+              key={index}
               style={[
                 styles.messageContainer,
-                item.sender === selectedUser && styles.senderMessage,
+                msg.sender === selectedUser
+                  ? styles.messageContainerRight
+                  : styles.messageContainerLeft,
               ]}
             >
-              <Text>{item.content}</Text>
-              {item.fileURL && (
-                <TouchableOpacity onPress={() => Linking.openURL(item.fileURL)}>
-                  <Text style={styles.fileLink}>{item.fileName}</Text>
-                </TouchableOpacity>
-              )}
+              <View style={styles.messageHeader}>
+                {msg.sender === selectedUser ? (
+                  <Image
+                    source={require("../assets/images/avatar.png")}
+                    style={styles.profileImage}
+                  />
+                ) : (
+                  <FontAwesome name="user-circle" size={24} color="#ccc" />
+                )}
+                <Text style={styles.messageRole}>{msg.role}</Text>
+                <Text style={styles.messageTime}>
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </Text>
+              </View>
+              <View style={styles.messageContent}>
+                <Text style={styles.messageText}>{msg.content}</Text>
+                {msg.fileURL && (
+                  <TouchableOpacity
+                    style={styles.fileLink}
+                    onPress={() => Linking.openURL(msg.fileURL)}
+                  >
+                    <MaterialIcons
+                      name="insert-drive-file"
+                      size={20}
+                      color="#007AFF"
+                    />
+                    <Text style={styles.fileLinkText}>{msg.fileName}</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
-          )}
-        />
+          ))}
+        </ScrollView>
         <View style={styles.inputContainer}>
           <TouchableOpacity
+            style={styles.fileUploadButton}
             onPress={handleFileChange}
-            style={styles.filePicker}
           >
-            <FontAwesome name="upload" size={20} color="gray" />
-            <Text>{fileName || "Upload File"}</Text>
+            <Feather name="upload" size={24} color="black" />
+            <Text style={styles.fileUploadText}>
+              {fileName || "Upload File"}
+            </Text>
           </TouchableOpacity>
           <TextInput
             style={styles.textInput}
@@ -275,21 +357,19 @@ const Messege = () => {
             onChangeText={setMessage}
           />
           <TouchableOpacity
-            onPress={handleSendMessage}
             style={styles.sendButton}
+            onPress={handleSendMessage}
           >
-            <FontAwesome name="paper-plane" size={20} color="white" />
+            <Feather name="send" size={24} color="white" />
+            <Text style={styles.sendButtonText}></Text>
           </TouchableOpacity>
         </View>
       </View>
-
       {isChatMembersModalOpen && (
-        <Modal
-          visible={isChatMembersModalOpen}
-          onRequestClose={handleModalClose}
-        >
-          {/* Insert your modal content */}
-        </Modal>
+        <ChatMembersModal
+          onClose={handleModalClose}
+          onSave={handleCreateChatWithMembers}
+        />
       )}
     </View>
   );
@@ -297,84 +377,163 @@ const Messege = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
     flex: 1,
+    flexDirection: "row",
   },
   sidebar: {
-    width: "25%",
-    padding: 10,
-    backgroundColor: "#f4f4f4",
-    borderRightWidth: 1,
-    borderColor: "#ddd",
+    backgroundColor: "#2c3e50",
+    padding: 2,
+    justifyContent: "flex-start",
+    width: 180,
   },
-  heading: {
+  toggleButton: {
+    alignSelf: "flex-start",
+    padding: 20,
+  },
+  sidebarTitle: {
+    color: "white",
     fontSize: 18,
     fontWeight: "bold",
+    marginBottom: 10,
   },
   newChatButton: {
-    backgroundColor: "#f56c00",
+    backgroundColor: "#3498db",
     padding: 10,
-    borderRadius: 8,
-    marginVertical: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginBottom: 10,
   },
   disabledButton: {
-    backgroundColor: "#f4a261",
+    backgroundColor: "#95a5a6",
   },
-  buttonText: {
+  newChatButtonText: {
     color: "white",
-    textAlign: "center",
+    fontSize: 16,
+  },
+  chatList: {
+    flex: 1,
+    marginTop: 10,
   },
   chatItem: {
-    padding: 12,
-    backgroundColor: "#e4e4e4",
-    borderRadius: 6,
-    marginBottom: 8,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: "#34495e",
+    borderRadius: 5,
+    marginBottom: 5,
   },
-  selectedChat: {
-    backgroundColor: "#d3d3d3",
+  selectedChatItem: {
+    backgroundColor: "#1abc9c",
   },
-  chatContainer: {
+  chatItemText: {
+    color: "white",
+    fontSize: 16,
+  },
+  mainContent: {
     flex: 1,
     padding: 10,
+    backgroundColor: "white",
+  },
+  messagesContainer: {
+    flex: 1,
+  },
+  chatMembersDropdown: {
+    padding: 10,
+    backgroundColor: "#ecf0f1",
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  dropdownLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  dropdownItem: {
+    fontSize: 14,
+    paddingVertical: 5,
   },
   messageContainer: {
-    backgroundColor: "#f1f1f1",
+    marginBottom: 10,
     padding: 10,
-    borderRadius: 6,
-    marginVertical: 8,
+    borderRadius: 10,
+    maxWidth: "80%",
   },
-  senderMessage: {
-    backgroundColor: "#d1e7ff",
+  messageContainerRight: {
     alignSelf: "flex-end",
+    backgroundColor: "#d1e7dd",
+  },
+  messageContainerLeft: {
+    alignSelf: "flex-start",
+    backgroundColor: "#f8d7da",
+  },
+  messageHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  profileImage: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 10,
+  },
+  messageRole: {
+    fontWeight: "bold",
+    marginRight: 5,
+  },
+  messageTime: {
+    fontSize: 12,
+    color: "gray",
+  },
+  messageContent: {
+    flexDirection: "column",
+  },
+  messageText: {
+    fontSize: 16,
   },
   fileLink: {
-    color: "blue",
-    textDecorationLine: "underline",
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+  },
+  fileLinkText: {
+    color: "#007AFF",
+    marginLeft: 5,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
+    padding: 10,
+    borderTopWidth: 1,
+    borderColor: "#ddd",
   },
-  filePicker: {
+  fileUploadButton: {
     flexDirection: "row",
     alignItems: "center",
+    padding: 10,
+    backgroundColor: "#ecf0f1",
+    borderRadius: 5,
     marginRight: 10,
+  },
+  fileUploadText: {
+    marginLeft: 5,
   },
   textInput: {
     flex: 1,
+    padding: 10,
     borderWidth: 1,
     borderColor: "#ddd",
-    padding: 10,
-    borderRadius: 6,
+    borderRadius: 5,
+    marginRight: 10,
   },
   sendButton: {
-    backgroundColor: "#f56c00",
+    backgroundColor: "#3498db",
     padding: 10,
-    borderRadius: 6,
-    marginLeft: 10,
+    borderRadius: 5,
+  },
+  sendButtonText: {
+    color: "white",
+    fontSize: 16,
   },
 });
-
-export default Messege;
+export default Message;
