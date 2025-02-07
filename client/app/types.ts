@@ -15,6 +15,7 @@ export type RootStackParamList = {
   WorkInformation: undefined;
   PersonalDetails: undefined;
   Resume: undefined;
+  forgotpassword: undefined;
   message: undefined;
 };
 

@@ -9,6 +9,7 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "./types";
 import Actions from "@/components/actions";
+import Reminders from "@/components/reminders";
 
 const Dashboard = () => {
   const [punchInTime, setPunchInTime] = useState<string | null>(null);
@@ -112,10 +113,9 @@ const Dashboard = () => {
           <View style={[t.textCenter]}><Actions /></View>
         </View>
 
-        <View style={[t.bgWhite, t.roundedLg, t.p4, t.shadow]}>
-          <Text style={[t.textLg, t.fontSemibold, t.mB4]}>Employee Distribution</Text>
-          <Text style={[t.textCenter, t.textSm]}>Pie chart placeholder</Text>
-          {/* Add Pie Chart component here for React Native */}
+        <View style={[t.bgWhite, t.roundedLg, t.p4, t.shadow, t.mB6,]}>
+          <Text style={[t.textLg, t.fontSemibold, t.mB4]}>My Activities</Text>
+          <View style={[t.textCenter]}><Reminders /></View>
         </View>
       </View >
     </ScrollView >
