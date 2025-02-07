@@ -27,6 +27,7 @@ import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Linking } from "react-native";
+import ProfilePicture from "@/components/profilepicture";
 
 const Message = () => {
   const [messages, setMessages] = useState([]);
@@ -45,7 +46,6 @@ const Message = () => {
   const [isMainChatVisible, setIsMainChatVisible] = useState(true);
   const [longPressedChatId, setLongPressedChatId] = useState(null); // Track the long-pressed chat
   const [isFileSelected, setIsFileSelected] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const getEmployeeData = async () => {
@@ -378,48 +378,69 @@ const Message = () => {
                 </ScrollView>
               )}
             </View>
-            {messages.map((msg, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.messageContainer,
-                  msg.sender === selectedUser
-                    ? styles.messageContainerRight
-                    : styles.messageContainerLeft,
-                ]}
-              >
-                <View style={styles.messageHeader}>
-                  {msg.sender === selectedUser ? (
-                    <Image
-                      source={require("../assets/images/avatar.png")}
-                      style={styles.profileImage}
-                    />
-                  ) : (
-                    <FontAwesome name="user-circle" size={24} color="#ccc" />
-                  )}
-                  <Text style={styles.messageRole}>{msg.role}</Text>
-                  <Text style={styles.messageTime}>
-                    {new Date(msg.timestamp).toLocaleTimeString()}
-                  </Text>
+            {messages.map((msg, index) => {
+              // Find sender's name from chatMembers based on empId
+              const senderData = chatMembers.find(
+                (member) => member.empId === msg.sender
+              );
+              const senderName = senderData
+                ? senderData.name.split(" ")[0]
+                : "Unknown"; // Get first name
+
+              return (
+                <View
+                  key={index}
+                  style={[
+                    styles.messageContainer,
+                    msg.sender === selectedUser
+                      ? styles.messageContainerRight
+                      : styles.messageContainerLeft,
+                  ]}
+                >
+                  <View style={styles.messageHeader}>
+                    {(() => {
+                      // Find the sender in chatMembers
+                      const senderData = chatMembers.find(
+                        (member) => member.empId === msg.sender
+                      );
+                      const senderName = senderData
+                        ? senderData.name.split(" ")[0]
+                        : "Unknown"; // First name
+                      const senderId = senderData ? senderData.empId : "N/A"; // Employee ID
+                      const senderProfilePic = senderData
+                        ? senderData.profilePicture
+                        : null; // Profile Picture URL
+
+                      return (
+                        <>
+                          {/* Show Profile Picture */}
+                          {senderProfilePic ? (
+                            <Image
+                              source={{ uri: senderProfilePic }}
+                              style={styles.profileImage}
+                            />
+                          ) : (
+                            <FontAwesome
+                              name="user-circle"
+                              size={24}
+                              color="#ccc"
+                            />
+                          )}
+
+                          {/* Show Sender Name & ID */}
+                          <Text style={styles.messageRole}>{senderName}</Text>
+                        </>
+                      );
+                    })()}
+
+                    {/* Show Message Timestamp */}
+                    <Text style={styles.messageTime}>
+                      {new Date(msg.timestamp).toLocaleTimeString()}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.messageContent}>
-                  <Text style={styles.messageText}>{msg.content}</Text>
-                  {msg.fileURL && (
-                    <TouchableOpacity
-                      style={styles.fileLink}
-                      onPress={() => Linking.openURL(msg.fileURL)}
-                    >
-                      <MaterialIcons
-                        name="insert-drive-file"
-                        size={20}
-                        color="#007AFF"
-                      />
-                      <Text style={styles.fileLinkText}>{msg.fileName}</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </ScrollView>
           <View style={styles.inputContainer}>
             <TouchableOpacity
