@@ -6,7 +6,7 @@ import { Slot } from 'expo-router';
 
 const RootLayout = () => {
   const segments = useSegments();
-  const isHiddenPage = ['login', 'index'].includes(segments?.[0] ?? '');
+  const isHiddenPage = ['login', 'index', 'forgotpassword'].includes(segments?.[0] ?? '');
 
   return (
     <View style={{ flex: 1 }}>

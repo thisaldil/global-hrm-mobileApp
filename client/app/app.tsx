@@ -16,6 +16,7 @@ import WorkInformation from "./profileComponents/WorkInformation";
 import PersonalDetails from "./profileComponents/PersonalDetails";
 import Resume from "./profileComponents/Resume";
 import { RootStackParamList } from "./types"; // Import from types.ts
+import ForgotPassword from "@/app/forgotpassword";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -50,6 +51,7 @@ const App: React.FC = () => {
         <Stack.Screen name="WorkInformation" component={WorkInformation} />
         <Stack.Screen name="PersonalDetails" component={PersonalDetails} />
         <Stack.Screen name="Resume" component={Resume} />
+        <Stack.Screen name="forgotpassword" component={ForgotPassword} />
       </Stack.Navigator>
     </NavigationContainer>
   );

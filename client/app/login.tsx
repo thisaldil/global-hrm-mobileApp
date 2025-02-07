@@ -13,7 +13,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const handleSubmit = async () => {
@@ -93,7 +92,7 @@ const Login = () => {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity >
+      <TouchableOpacity onPress={() => navigation.navigate("forgotpassword")}>
         <Text style={[t.textOrange500, t.textSm, t.underline]}>Forgot Password?</Text>
       </TouchableOpacity>
     </View>
