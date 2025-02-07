@@ -15,6 +15,7 @@ export type RootStackParamList = {
   WorkInformation: undefined;
   PersonalDetails: undefined;
   Resume: undefined;
+  message: undefined;
 };
 
 export type NavigationProps = StackNavigationProp<RootStackParamList>;
