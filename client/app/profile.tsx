@@ -165,7 +165,7 @@ const Profile: React.FC = () => {
         return name || 'image.jpg'; //Provide a default name
       };
 
-      formData.append('profilePic', { //**CHANGED**: Match backend key.  Crucial!
+      formData.append('profilePic', {
         uri: selectedImage,
         name: getFileName(selectedImage),
         type: getFileType(selectedImage),
@@ -237,21 +237,16 @@ const Profile: React.FC = () => {
         <View style={styles.avatarSection}>
           <TouchableOpacity onPress={openModal}>
             <View style={styles.avatarWrapper}>
-              <ProfilePicture profilepic={personalDetails.profilepic} /> {/* Pass the profilepic prop */}
+              <ProfilePicture /> {/* Pass the profilepic prop */}
             </View>
           </TouchableOpacity>
         </View>
 
         <View style={styles.profileInfo}>
-          <Text style={styles.nameText}>{personalDetails.name}</Text>
-          <Text style={styles.designationText}>{workDetails.designation}</Text>
-          <Text style={styles.infoText}>
-            Supervisor: {workDetails.supervisor}
-          </Text>
-          <Text style={styles.infoText}>Email: {workDetails.workEmail}</Text>
-          <Text style={styles.infoText}>
-            Work Phone: {workDetails.workPhone}
-          </Text>
+          <Text style={styles.nameText}>{personalDetails.name || "N/A"}</Text>
+          <Text style={styles.designationText}>{workDetails.designation || "N/A"}</Text>
+          <Text style={styles.infoText}>{workDetails.workEmail || "N/A"}</Text>
+          <Text style={styles.infoText}>{workDetails.workPhone || "N/A"}</Text>
         </View>
       </View>
 
