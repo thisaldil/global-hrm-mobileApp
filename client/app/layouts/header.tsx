@@ -31,7 +31,7 @@ const Header = () => {
       ]}
     >
       {/* Company Logo */}
-      <TouchableOpacity onPress={() => router.push('/home')} style={[t.flexRow, t.itemsCenter]}>
+      <TouchableOpacity onPress={() => router.push('/dashboard')} style={[t.flexRow, t.itemsCenter]}>
         <Image
           source={require('../../assets/images/logo2.png')}
           style={{ width: 40, height: 40, resizeMode: 'contain' }}

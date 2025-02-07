@@ -120,20 +120,20 @@ const Sidebar = ({
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => handlePress("chat", "chat")}
+            onPress={() => handlePress("message", "message")}
           >
             <Icon
               name="chatbubble-outline"
               size={24}
               style={[
                 styles.icon,
-                activeItem === "chat" && { color: activeColor },
+                activeItem === "message" && { color: activeColor },
               ]}
             />
             <Text
               style={[
                 styles.menuText,
-                activeItem === "chat" && { color: activeColor },
+                activeItem === "message" && { color: activeColor },
               ]}
             >
               Communication
