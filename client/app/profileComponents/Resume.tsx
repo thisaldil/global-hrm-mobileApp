@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  Alert,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TouchableOpacity, FlatList, Alert, StyleSheet } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
@@ -96,7 +89,7 @@ const Resume = () => {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.cardContent}>
-              <Ionicons name="briefcase-outline" size={24} color="#444" style={styles.icon} />
+              <Ionicons name="briefcase-outline" size={32} style={styles.icon} color="#FFA500" />
               <View style={styles.details}>
                 <Text style={styles.cardTitle}>{item.company}</Text>
                 <Text style={styles.cardSubtitle}>{item.role}</Text>
@@ -112,25 +105,24 @@ const Resume = () => {
           </View>
         )}
       />
-
       <Text style={styles.header}>Education</Text>
       <FlatList
-        data={experienceList}
+        data={educationList}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.cardContent}>
-              <Ionicons name="school-outline" size={24} color="#444" style={styles.icon} />
+              <Ionicons name="school-outline" size={32} style={styles.icon} color="#FFA500" />
               <View style={styles.details}>
-                <Text style={styles.cardTitle}>{item.company}</Text>
-                <Text style={styles.cardSubtitle}>{item.role}</Text>
+                <Text style={styles.cardTitle}>{item.institution}</Text>
+                <Text style={styles.cardSubtitle}>{item.degree}</Text>
                 <Text style={styles.cardDate}>
                   {new Date(item.date_from).toISOString().split("T")[0]} to{" "}
                   {item.date_to ? new Date(item.date_to).toISOString().split("T")[0] : "Current"}
                 </Text>
               </View>
             </View>
-            <TouchableOpacity onPress={() => handleDelete(item.id, "Experience")} style={styles.deleteButton}>
+            <TouchableOpacity onPress={() => handleDelete(item.id, "Education")} style={styles.deleteButton}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
           </View>
