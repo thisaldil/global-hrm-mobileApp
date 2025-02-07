@@ -46,6 +46,7 @@ const Message = () => {
   const [isMainChatVisible, setIsMainChatVisible] = useState(true);
   const [longPressedChatId, setLongPressedChatId] = useState(null); // Track the long-pressed chat
   const [isFileSelected, setIsFileSelected] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const getEmployeeData = async () => {
@@ -386,6 +387,9 @@ const Message = () => {
               const senderName = senderData
                 ? senderData.name.split(" ")[0]
                 : "Unknown"; // Get first name
+              const senderProfilePic = senderData
+                ? senderData.profilePicture
+                : null;
 
               return (
                 <View
@@ -397,47 +401,34 @@ const Message = () => {
                       : styles.messageContainerLeft,
                   ]}
                 >
+                  {/* Message Header */}
                   <View style={styles.messageHeader}>
-                    {(() => {
-                      // Find the sender in chatMembers
-                      const senderData = chatMembers.find(
-                        (member) => member.empId === msg.sender
-                      );
-                      const senderName = senderData
-                        ? senderData.name.split(" ")[0]
-                        : "Unknown"; // First name
-                      const senderId = senderData ? senderData.empId : "N/A"; // Employee ID
-                      const senderProfilePic = senderData
-                        ? senderData.profilePicture
-                        : null; // Profile Picture URL
+                    {/* Sender Name */}
+                    <Text style={styles.messageRole}>{senderName}</Text>
 
-                      return (
-                        <>
-                          {/* Show Profile Picture */}
-                          {senderProfilePic ? (
-                            <Image
-                              source={{ uri: senderProfilePic }}
-                              style={styles.profileImage}
-                            />
-                          ) : (
-                            <FontAwesome
-                              name="user-circle"
-                              size={24}
-                              color="#ccc"
-                            />
-                          )}
-
-                          {/* Show Sender Name & ID */}
-                          <Text style={styles.messageRole}>{senderName}</Text>
-                        </>
-                      );
-                    })()}
-
-                    {/* Show Message Timestamp */}
+                    {/* Timestamp */}
                     <Text style={styles.messageTime}>
                       {new Date(msg.timestamp).toLocaleTimeString()}
                     </Text>
                   </View>
+
+                  {/* ✅ Message Content Added Here */}
+                  <View style={styles.messageBody}>
+                    <Text style={styles.messageText}>{msg.content}</Text>
+                  </View>
+                  {msg.fileURL && (
+                    <TouchableOpacity
+                      style={styles.fileLink}
+                      onPress={() => Linking.openURL(msg.fileURL)}
+                    >
+                      <MaterialIcons
+                        name="insert-drive-file"
+                        size={20}
+                        color="#007AFF"
+                      />
+                      <Text style={styles.fileLinkText}>{msg.fileName}</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               );
             })}
