@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Modal,
+  Image
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
@@ -32,6 +33,8 @@ interface PersonalDetails {
   profilepic?: string; // Add this to reflect backend data
 }
 
+const defaultAvatar = require('../assets/images/avatar.png');
+
 const Profile: React.FC = () => {
   const [visibleSection, setVisibleSection] = useState<string>("account");
   const [workDetails, setWorkDetails] = useState<WorkDetails>({});
@@ -40,6 +43,7 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [shouldFetchAvatar, setShouldFetchAvatar] = useState(false); //New state
+  const [avatar, setAvatar] = useState(defaultAvatar);
 
   useEffect(() => {
     const fetchEmpId = async () => {
@@ -77,6 +81,24 @@ const Profile: React.FC = () => {
     };
     fetchData();
   }, [empId, shouldFetchAvatar]);  // Re-fetch on avatar change
+
+  useEffect(() => {
+    const fetchProfilePic = async () => {
+      try {
+        const empId = await AsyncStorage.getItem('empId');
+        if (!empId) return;
+
+        const response = await axios.get(`https://global-hrm-mobile-server.vercel.app/employees/getProfileImage/${empId}`);
+        if (response.data.imageUrl) {
+          setAvatar({ uri: response.data.imageUrl });
+        }
+      } catch (err) {
+        console.log('Error fetching employee profile pic:', err);
+      }
+    };
+
+    fetchProfilePic();
+  }, []);
 
   const handleSectionToggle = (section: string) => {
     setVisibleSection(section);
@@ -173,9 +195,9 @@ const Profile: React.FC = () => {
         } else if (error.response && error.response.status === 404) {
           alert('Upload endpoint not found.  Please contact support.');
         } else if (error.response && error.response.status === 500) {
-           alert('Server error during upload. Please try again later.'); //Specific 500 message
+          alert('Server error during upload. Please try again later.'); //Specific 500 message
         }
-         else {
+        else {
           alert('Upload failed. Please try again later.');
         }
       }
@@ -215,7 +237,7 @@ const Profile: React.FC = () => {
         <View style={styles.avatarSection}>
           <TouchableOpacity onPress={openModal}>
             <View style={styles.avatarWrapper}>
-               <ProfilePicture profilepic={personalDetails.profilepic} /> {/* Pass the profilepic prop */}
+              <ProfilePicture profilepic={personalDetails.profilepic} /> {/* Pass the profilepic prop */}
             </View>
           </TouchableOpacity>
         </View>
@@ -274,7 +296,7 @@ const Profile: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={{ backgroundColor: "white", padding: 20, borderRadius: 10 }}>
             <View style={styles.modalAvatar}>
-              <ProfilePicture profilepic={personalDetails.profilepic} />  {/* Pass the profilepic prop */}
+              <Image source={avatar} style={styles.avatar}/>
             </View>
             <TouchableOpacity
               style={styles.changeAvatarButton}
@@ -328,7 +350,6 @@ const styles = StyleSheet.create({
   avatar: {
     width: "100%",
     height: "100%",
-    borderRadius: 50,
   },
   profileInfo: {
     flex: 1,
