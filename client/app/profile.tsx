@@ -4,29 +4,46 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   StyleSheet,
+  ActivityIndicator,
   Modal,
-  Alert,
+  Image
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
+import ProfilePicture from "@/components/profilepicture";
 import AccountSecurity from "./profileComponents/AccountSecurity";
-import PersonalDetails from "./profileComponents/PersonalDetails";
 import WorkInformation from "./profileComponents/WorkInformation";
+import PersonalDetails from "./profileComponents/PersonalDetails";
 import Resume from "./profileComponents/Resume";
 
-const Profile = () => {
-  const [visibleSection, setVisibleSection] = useState("account");
-  const [avatar, setAvatar] = useState(
-    "https://global-hrm-mobile-server.vercel.app/images/avatar.png"
-  );
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [workDetails, setWorkDetails] = useState({});
-  const [personalDetails, setPersonalDetails] = useState({});
+const API_BASE_URL = "https://global-hrm-mobile-server.vercel.app";
+const PRIMARY_COLOR = "#fa7c10"; // Define the orange color
+
+interface WorkDetails {
+  designation?: string;
+  supervisor?: string;
+  workEmail?: string;
+  workPhone?: string;
+}
+
+interface PersonalDetails {
+  name?: string;
+  profilepic?: string; // Add this to reflect backend data
+}
+
+const defaultAvatar = require('../assets/images/avatar.png');
+
+const Profile: React.FC = () => {
+  const [visibleSection, setVisibleSection] = useState<string>("account");
+  const [workDetails, setWorkDetails] = useState<WorkDetails>({});
+  const [personalDetails, setPersonalDetails] = useState<PersonalDetails | null>(null);
   const [empId, setEmpId] = useState<string | null>(null);
-  const API_BASE_URL = "https://global-hrm-mobile-server.vercel.app";
+  const [loading, setLoading] = useState<boolean>(true);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [shouldFetchAvatar, setShouldFetchAvatar] = useState(false); //New state
+  const [avatar, setAvatar] = useState(defaultAvatar);
 
   useEffect(() => {
     const fetchEmpId = async () => {
@@ -45,134 +62,191 @@ const Profile = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!empId) return;
+      setLoading(true);
       try {
-        const personalResponse = await axios.get(
+        const personalResponse = await axios.get<PersonalDetails>(
           `${API_BASE_URL}/employees/getPersonalDetails/${empId}`
         );
         setPersonalDetails(personalResponse.data);
-        const profilePicUrl = personalResponse.data.profilepic;
 
-        if (profilePicUrl) {
-          setAvatar(
-            `https://global-hrm-mobile-server.vercel.app${profilePicUrl}`
-          );
-        } else {
-          setAvatar(
-            "https://global-hrm-mobile-server.vercel.app/images/avatar.png"
-          );
-        }
-        const workResponse = await axios.get(
+        const workResponse = await axios.get<WorkDetails>(
           `${API_BASE_URL}/employees/getWorkDetails/${empId}`
         );
         setWorkDetails(workResponse.data);
       } catch (err) {
         console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
-  }, [empId]);
+  }, [empId, shouldFetchAvatar]);  // Re-fetch on avatar change
 
-  const handleFileChange = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.cancelled) {
-      setAvatar(result.uri);
-
+  useEffect(() => {
+    const fetchProfilePic = async () => {
       try {
-        const formData = new FormData();
-        formData.append("profilePic", {
-          uri: result.uri,
-          type: "image/jpeg",
-          name: "profilePic.jpg",
-        });
+        const empId = await AsyncStorage.getItem('empId');
+        if (!empId) return;
 
-        await axios.post(
-          `https://global-hrm-mobile-server.vercel.app/employees/uploadProfileImage/${empId}`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-
-        Alert.alert(
-          "Profile Picture Updated",
-          "Your profile picture has been updated successfully."
-        );
+        const response = await axios.get(`https://global-hrm-mobile-server.vercel.app/employees/getProfileImage/${empId}`);
+        if (response.data.imageUrl) {
+          setAvatar({ uri: response.data.imageUrl });
+        }
       } catch (err) {
-        console.log("Error uploading profile image:", err);
+        console.log('Error fetching employee profile pic:', err);
       }
-    }
-  };
+    };
 
-  const handleSectionToggle = (section) => {
+    fetchProfilePic();
+  }, []);
+
+  const handleSectionToggle = (section: string) => {
     setVisibleSection(section);
   };
 
-  const getSectionButtonStyle = (section) => {
-    if (visibleSection === section) {
-      return [styles.sectionButton, styles.sectionButtonActive];
-    } else {
-      return [styles.sectionButton, styles.sectionButtonInactive];
-    }
+  const getSectionButtonStyle = (section: string) => {
+    return visibleSection === section
+      ? [styles.sectionButton, styles.sectionButtonActive]
+      : [styles.sectionButton, styles.sectionButtonInactive];
   };
 
-  const getSectionTextStyle = (section) => {
+  const getSectionTextStyle = (section: string) => {
     return visibleSection === section
       ? styles.buttonTextActive
       : styles.buttonTextInactive;
   };
 
+  const openModal = () => {
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+  };
+
+  const changeAvatar = async () => {
+    let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert('Permission to access camera roll is required!');
+      return;
+    }
+
+    let pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Changed to only allow images
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7, // Lower the quality to reduce image size
+    });
+
+    if (pickerResult.canceled === true) {
+      return;
+    }
+
+    if (pickerResult.assets && pickerResult.assets.length > 0) {
+      const selectedImage = pickerResult.assets[0].uri;
+
+      const formData = new FormData();
+      const getFileType = (uri: string): string => {
+        const ext = uri.split('.').pop();
+        switch (ext) {
+          case 'jpg':
+          case 'jpeg':
+            return 'image/jpeg';
+          case 'png':
+            return 'image/png';
+          default:
+            return 'image/jpeg'; // Default to jpeg to ensure it works
+        }
+      };
+
+      const getFileName = (uri: string): string => {
+        const name = uri.split('/').pop();
+        return name || 'image.jpg'; //Provide a default name
+      };
+
+      formData.append('profilePic', {
+        uri: selectedImage,
+        name: getFileName(selectedImage),
+        type: getFileType(selectedImage),
+      });
+
+      try {
+        const uploadEndpoint = `${API_BASE_URL}/employees/uploadProfileImage/${empId}`;
+        console.log(`Attempting to upload to: ${uploadEndpoint}`);
+
+        const response = await axios.post(uploadEndpoint, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        if (response.status === 200) {
+          console.log('Avatar uploaded successfully!');
+          setShouldFetchAvatar(true);  // Trigger re-fetch to update avatar
+
+        } else {
+          console.error('Avatar upload failed:', response.data);
+        }
+      } catch (error: any) {
+        console.error('Error uploading avatar:', error);
+        if (error.response && error.response.status === 413) {
+          alert('Image is too large. Please select a smaller image.');
+        } else if (error.response && error.response.status === 404) {
+          alert('Upload endpoint not found.  Please contact support.');
+        } else if (error.response && error.response.status === 500) {
+          alert('Server error during upload. Please try again later.'); //Specific 500 message
+        }
+        else {
+          alert('Upload failed. Please try again later.');
+        }
+      }
+
+      closeModal();
+    } else {
+      console.warn('No image selected.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <View
+        style={[styles.container, { justifyContent: "center", alignItems: "center" }]}
+      >
+        <ActivityIndicator size="large" color={PRIMARY_COLOR} />
+        <Text style={{ marginTop: 10, color: "#888" }}>Loading profile...</Text>
+      </View>
+    );
+  }
+
+  if (!personalDetails) {
+    return (
+      <View
+        style={[styles.container, { justifyContent: "center", alignItems: "center" }]}
+      >
+        <Text style={{ color: "#888" }}>
+          Could not load profile information.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.profileContainer}>
         <View style={styles.avatarSection}>
-          <TouchableOpacity onPress={() => setIsModalVisible(true)}>
+          <TouchableOpacity onPress={openModal}>
             <View style={styles.avatarWrapper}>
-              <Image source={{ uri: avatar }} style={styles.avatar} />
+              <ProfilePicture /> {/* Pass the profilepic prop */}
             </View>
           </TouchableOpacity>
-
-          <Modal
-            visible={isModalVisible}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setIsModalVisible(false)}
-          >
-            <View style={styles.modalOverlay}>
-              <TouchableOpacity
-                onPress={() => setIsModalVisible(false)}
-                style={styles.closeModalButton}
-              >
-                <AntDesign name="close" style={styles.closeModalIcon} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleFileChange}
-                style={styles.changeAvatarButton}
-              >
-                <Text style={styles.changeAvatarText}>Change Avatar</Text>
-              </TouchableOpacity>
-            </View>
-          </Modal>
         </View>
 
         <View style={styles.profileInfo}>
-          <Text style={styles.nameText}>{personalDetails.name}</Text>
-          <Text style={styles.designationText}>{workDetails.designation}</Text>
-          <Text style={styles.infoText}>
-            Supervisor: {workDetails.supervisor}
-          </Text>
-          <Text style={styles.infoText}>Email: {workDetails.workEmail}</Text>
-          <Text style={styles.infoText}>
-            Work Phone: {workDetails.workPhone}
-          </Text>
+          <Text style={styles.nameText}>{personalDetails.name || "N/A"}</Text>
+          <Text style={styles.designationText}>{workDetails.designation || "N/A"}</Text>
+          <Text style={styles.infoText}>{workDetails.workEmail || "N/A"}</Text>
+          <Text style={styles.infoText}>{workDetails.workPhone || "N/A"}</Text>
         </View>
       </View>
 
@@ -187,7 +261,7 @@ const Profile = () => {
           onPress={() => handleSectionToggle("work")}
           style={getSectionButtonStyle("work")}
         >
-          <Text style={getSectionTextStyle("work")}>Work </Text>
+          <Text style={getSectionTextStyle("work")}>Work</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleSectionToggle("resume")}
@@ -207,6 +281,30 @@ const Profile = () => {
       {visibleSection === "personal" && <PersonalDetails />}
       {visibleSection === "work" && <WorkInformation />}
       {visibleSection === "resume" && <Resume />}
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={{ backgroundColor: "white", padding: 20, borderRadius: 10 }}>
+            <View style={styles.modalAvatar}>
+              <Image source={avatar} style={styles.avatar}/>
+            </View>
+            <TouchableOpacity
+              style={styles.changeAvatarButton}
+              onPress={changeAvatar}
+            >
+              <Text style={styles.changeAvatarText}>Change</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.closeModalButton} onPress={closeModal}>
+              <AntDesign name="close" style={styles.closeModalIcon} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -240,14 +338,13 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     overflow: "hidden",
     borderWidth: 3,
-    borderColor: "#ff7f50",
+    borderColor: PRIMARY_COLOR,
     justifyContent: "center",
     alignItems: "center",
   },
   avatar: {
     width: "100%",
     height: "100%",
-    borderRadius: 50,
   },
   profileInfo: {
     flex: 1,
@@ -281,12 +378,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   sectionButtonActive: {
-    backgroundColor: "#ff7f50",
+    backgroundColor: PRIMARY_COLOR,
   },
   sectionButtonInactive: {
     backgroundColor: "transparent",
     borderWidth: 2,
-    borderColor: "#ff7f50",
+    borderColor: PRIMARY_COLOR,
   },
   buttonTextActive: {
     color: "#fff",
@@ -294,7 +391,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   buttonTextInactive: {
-    color: "#ff7f50",
+    color: PRIMARY_COLOR,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -306,8 +403,8 @@ const styles = StyleSheet.create({
   },
   closeModalButton: {
     position: "absolute",
-    top: 30,
-    right: 30,
+    top: 10,
+    right: 10,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -322,12 +419,12 @@ const styles = StyleSheet.create({
   },
   closeModalIcon: {
     fontSize: 24,
-    color: "#FF6347",
+    color: "#fa7c10",
   },
   changeAvatarButton: {
     paddingVertical: 16,
     paddingHorizontal: 32,
-    backgroundColor: "#FF6347",
+    backgroundColor: PRIMARY_COLOR,
     borderRadius: 50,
     marginTop: 20,
     shadowColor: "#000",
@@ -335,12 +432,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 5,
+    alignSelf: 'center'
   },
   changeAvatarText: {
     color: "#fff",
     fontSize: 20,
     fontWeight: "600",
     textAlign: "center",
+  },
+  modalAvatar: {
+    width: 300,
+    height: 300,
+    borderRadius: 100,
+    marginBottom: 20,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
 });
 
