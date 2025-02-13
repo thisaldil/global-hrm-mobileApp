@@ -74,3 +74,17 @@ Contributions to this project:
 | Tashini | [@TasH-i](https://github.com/TasH-i) |
 
 
+## 📸 Screenshots
+<p align="center">
+  <img src="screenshots/ss1.jpg" width="300">
+  <img src="screenshots/ss2.jpg" width="300">
+  <img src="screenshots/ss3.jpg" width="300">
+  <img src="screenshots/ss4.jpg" width="300">
+  <img src="screenshots/ss5.jpg" width="300">
+  <img src="screenshots/ss6.jpg" width="300">
+  <img src="screenshots/ss7.jpg" width="300">
+  <img src="screenshots/ss8.jpg" width="300">
+ 
+</p>
+
+
