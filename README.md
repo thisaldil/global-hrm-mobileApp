@@ -1,12 +1,11 @@
-# 🌍 GLOBAL HRM
+# 🌍 GLOBAL HRM Mobile Application
 
 ## Overview
-GLOBAL HRM Mobile Application is a powerful and intelligent **Human Resource Management System** designed to help businesses efficiently manage their workforce. It includes advanced features such as employee attendance prediction, payroll automation, performance tracking, and resource planning to optimize HR operations.
-
+GLOBAL HRM Mobile Application is a powerful and intelligent **Human Resource Management System** designed to help businesses efficiently manage their workforce. 
 ---
 
 ## 🌟 Features
-- **Punch In & Out**: Seamlessly track employee working hours with an intuitive punch-in and punch-out system- **Payroll Management**: Automate payroll calculations, tax deductions, and salary disbursements.
+- **Punch In & Out**: Seamlessly track employee working hours with an intuitive punch-in and punch-out system
 - **Payroll System**: Automate payroll calculations, tax deductions, and salary disbursements.
 - **Leaves & Attendance**: Manage leave requests, track attendance, and monitor absenteeism.
 - **Communication System**: Enhance internal communication with an integrated messaging and collaboration platform.
